@@ -67,8 +67,8 @@ RUN pip install \
 
 RUN pip install \
     crewai==0.11.2 \
-    langchain==0.2.16 \
-    langchain-community==0.2.16
+    langchain==0.1.20 \
+    langchain-community==0.0.38
 
 # Installation du reste des dépendances
 RUN pip install --no-deps -r requirements.final.txt || pip install -r requirements.final.txt
