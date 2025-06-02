@@ -1,0 +1,17 @@
+# Requirements minimaux pour le debugging
+# Seulement les dépendances essentielles
+
+# Core web framework
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic==2.5.3
+
+# HTTP client - version compatible
+httpx==0.25.2
+
+# AI provider - version compatible
+ollama==0.2.1
+
+# Base utilities
+python-dotenv==1.0.0
+aiofiles==23.2.1

@@ -1,0 +1,118 @@
+FROM python:3.11-slim as builder
+
+# Variables d'environnement
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    gcc \
+    libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Créer l'environnement virtuel
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Mettre à jour pip
+RUN pip install --upgrade pip setuptools wheel
+
+# Installation par étapes pour éviter les conflits
+# Étape 1: Installer les dépendances de base
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    pydantic==2.4.2 \
+    pydantic-settings==2.0.3
+
+# Étape 2: Installer les clients HTTP/ASYNC
+RUN pip install --no-cache-dir \
+    httpx==0.25.2 \
+    aiohttp==3.8.6 \
+    aiofiles==23.2.1
+
+# Étape 3: Installer les dépendances de base de données
+RUN pip install --no-cache-dir \
+    sqlalchemy==2.0.23 \
+    asyncpg==0.29.0 \
+    redis==5.0.1
+
+# Étape 4: Installer les dépendances LLM/AI (versions compatibles)
+RUN pip install --no-cache-dir \
+    torch==2.1.1 \
+    transformers==4.35.2 \
+    sentence-transformers==2.2.2
+
+# Étape 5: Installer ollama avec version spécifique
+RUN pip install --no-cache-dir ollama==0.1.9
+
+# Étape 6: Installer les autres dépendances
+RUN pip install --no-cache-dir \
+    qdrant-client==1.6.9 \
+    langchain==0.1.20 \
+    langchain-community==0.0.38 \
+    crewai==0.11.0 \
+    langgraph==0.0.55
+
+# Étape 7: Installer les utilitaires
+RUN pip install --no-cache-dir \
+    python-dotenv==1.0.0 \
+    celery==5.3.4 \
+    structlog==23.2.0 \
+    prometheus-client==0.19.0
+
+# Étape 8: Installer les dépendances de sécurité
+RUN pip install --no-cache-dir \
+    python-jose[cryptography]==3.3.0 \
+    passlib[bcrypt]==1.7.4 \
+    cryptography==41.0.7
+
+# Stage de production
+FROM python:3.11-slim as production
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+# Installer les dépendances runtime
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Créer l'utilisateur
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Copier l'environnement virtuel
+COPY --from=builder /opt/venv /opt/venv
+
+# Créer les répertoires
+RUN mkdir -p /app/logs /app/data /app/uploads && \
+    chown -R appuser:appuser /app
+
+# Copier le code application
+WORKDIR /app
+COPY --chown=appuser:appuser . .
+
+# Configurer l'utilisateur
+USER appuser
+
+# Créer le script d'entrée
+RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo 'echo "Starting MAR Application..."' >> /app/entrypoint.sh && \
+    echo 'exec uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+EXPOSE 8000
+
+ENTRYPOINT ["/app/entrypoint.sh"]
