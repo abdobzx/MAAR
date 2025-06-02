@@ -69,33 +69,31 @@ WORKDIR /app
 COPY --chown=appuser:appuser . .
 
 # Créer un script d'entrée
-RUN cat > /app/entrypoint.sh << 'EOF'
-#!/bin/bash
-set -e
-
-# Attendre que PostgreSQL soit prêt
-until pg_isready -h ${DB_HOST:-localhost} -p ${DB_PORT:-5432} -U ${DB_USER:-postgres}; do
-  echo "Waiting for PostgreSQL..."
-  sleep 2
-done
-
-# Exécuter les migrations si nécessaire
-if [ "${AUTO_MIGRATE:-false}" = "true" ]; then
-  echo "Running database migrations..."
-  python -c "
-import asyncio
-from database.manager import DatabaseManager
-async def migrate():
-    db = DatabaseManager()
-    await db.initialize()
-    await db.close()
-asyncio.run(migrate())
-"
-fi
-
-# Démarrer l'application
-exec "$@"
-EOF
+RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo '' >> /app/entrypoint.sh && \
+    echo '# Attendre que PostgreSQL soit prêt' >> /app/entrypoint.sh && \
+    echo 'until pg_isready -h ${DB_HOST:-localhost} -p ${DB_PORT:-5432} -U ${DB_USER:-postgres}; do' >> /app/entrypoint.sh && \
+    echo '  echo "Waiting for PostgreSQL..."' >> /app/entrypoint.sh && \
+    echo '  sleep 2' >> /app/entrypoint.sh && \
+    echo 'done' >> /app/entrypoint.sh && \
+    echo '' >> /app/entrypoint.sh && \
+    echo '# Exécuter les migrations si nécessaire' >> /app/entrypoint.sh && \
+    echo 'if [ "${AUTO_MIGRATE:-false}" = "true" ]; then' >> /app/entrypoint.sh && \
+    echo '  echo "Running database migrations..."' >> /app/entrypoint.sh && \
+    echo '  python -c "' >> /app/entrypoint.sh && \
+    echo 'import asyncio' >> /app/entrypoint.sh && \
+    echo 'from database.manager import DatabaseManager' >> /app/entrypoint.sh && \
+    echo 'async def migrate():' >> /app/entrypoint.sh && \
+    echo '    db = DatabaseManager()' >> /app/entrypoint.sh && \
+    echo '    await db.initialize()' >> /app/entrypoint.sh && \
+    echo '    await db.close()' >> /app/entrypoint.sh && \
+    echo 'asyncio.run(migrate())' >> /app/entrypoint.sh && \
+    echo '"' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
+    echo '' >> /app/entrypoint.sh && \
+    echo '# Démarrer l'\''application' >> /app/entrypoint.sh && \
+    echo 'exec "$@"' >> /app/entrypoint.sh
 
 RUN chmod +x /app/entrypoint.sh && \
     chown appuser:appuser /app/entrypoint.sh
