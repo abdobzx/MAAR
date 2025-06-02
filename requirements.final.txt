@@ -25,7 +25,7 @@ langgraph==0.0.55
 # =============================================================================
 # AI/ML PROVIDERS - Ollama version compatible
 # =============================================================================
-ollama==0.2.1
+ollama
 sentence-transformers==2.2.2
 transformers==4.36.2
 torch==2.1.2
