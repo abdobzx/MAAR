@@ -96,9 +96,9 @@ services:
       KC_DB_PASSWORD: rag_password
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8180
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
     volumes:
       - keycloak_data:/opt/keycloak/data
     ports:
@@ -198,7 +198,7 @@ services:
     image: jaegertracing/all-in-one:latest
     container_name: rag_jaeger
     environment:
-      COLLECTOR_OTLP_ENABLED: true
+      COLLECTOR_OTLP_ENABLED: "true"
     ports:
       - "16686:16686"
       - "14250:14250"
