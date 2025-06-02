@@ -20,7 +20,7 @@ rank-bm25==0.2.2
 sentence-transformers==2.2.2
 transformers==4.36.2
 torch==2.1.2
-ollama==0.1.7
+ollama>=0.2.0
 
 # Document Processing
 pypdf2==3.0.1
@@ -52,7 +52,8 @@ opentelemetry-instrumentation-fastapi==0.43b0
 langsmith==0.0.69
 
 # Utilities
-httpx==0.26.0
+# HTTP Client
+httpx>=0.25.2,<0.26.0
 aiofiles==23.2.1
 python-dotenv==1.0.0
 celery==5.3.4
