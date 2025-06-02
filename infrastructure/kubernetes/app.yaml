@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: enterprise-rag
+  labels:
+    app: rag-api
+    component: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rag-api
+  template:
+    metadata:
+      labels:
+        app: rag-api
+        component: api
+    spec:
+      containers:
+      - name: rag-api
+        image: enterprise-rag:latest
+        command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: enterprise-rag-config
+        - secretRef:
+            name: enterprise-rag-secrets
+        env:
+        - name: AUTO_MIGRATE
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: uploads
+          mountPath: /app/uploads
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: uploads
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-api-service
+  namespace: enterprise-rag
+  labels:
+    app: rag-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: rag-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: enterprise-rag
+  labels:
+    app: celery-worker
+    component: worker
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+        component: worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: enterprise-rag:latest
+        command: ["celery", "-A", "core.celery", "worker", "--loglevel=info", "--concurrency=4"]
+        envFrom:
+        - configMapRef:
+            name: enterprise-rag-config
+        - secretRef:
+            name: enterprise-rag-secrets
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: data
+        emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  namespace: enterprise-rag
+  labels:
+    app: celery-beat
+    component: scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-beat
+  template:
+    metadata:
+      labels:
+        app: celery-beat
+        component: scheduler
+    spec:
+      containers:
+      - name: celery-beat
+        image: enterprise-rag:latest
+        command: ["celery", "-A", "core.celery", "beat", "--loglevel=info"]
+        envFrom:
+        - configMapRef:
+            name: enterprise-rag-config
+        - secretRef:
+            name: enterprise-rag-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}

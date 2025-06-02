@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # Application principale RAG optimisée pour staging
+  rag_api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: rag_api_staging
+    environment:
+      - ENVIRONMENT=staging
+      - DEBUG=false
+      - AUTO_MIGRATE=true
+      - WORKERS=4
+    env_file:
+      - .env.staging
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+        reservations:
+          memory: 1G
+          cpus: "0.5"
+
+  # Celery Workers optimisés
+  celery_worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: rag_celery_staging
+    command: celery -A core.celery worker --loglevel=info --concurrency=4 --max-tasks-per-child=1000
+    environment:
+      - ENVIRONMENT=staging
+      - C_FORCE_ROOT=1
+    env_file:
+      - .env.staging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+        reservations:
+          memory: 1G
+          cpus: "0.5"
+
+  # Nginx avec configuration optimisée
+  nginx:
+    image: nginx:alpine
+    container_name: rag_nginx_staging
+    volumes:
+      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/docker/nginx/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - rag_api
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  rag_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

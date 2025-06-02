@@ -1,0 +1,219 @@
+# Default values for enterprise-rag
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: ghcr.io
+  imagePullSecrets: []
+  storageClass: "fast-ssd"
+
+# Application settings
+app:
+  name: enterprise-rag
+  version: "1.0.0"
+  environment: production
+
+# Image settings
+image:
+  repository: ghcr.io/yourorg/enterprise-rag
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# API deployment
+api:
+  enabled: true
+  replicaCount: 3
+  
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    hosts:
+      - host: api.enterprise-rag.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: enterprise-rag-tls
+        hosts:
+          - api.enterprise-rag.com
+
+# Celery workers
+celery:
+  worker:
+    enabled: true
+    replicaCount: 4
+    
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1"
+      limits:
+        memory: "4Gi"
+        cpu: "2"
+    
+    autoscaling:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 15
+      targetCPUUtilizationPercentage: 75
+  
+  beat:
+    enabled: true
+    replicaCount: 1
+    
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+# PostgreSQL (using Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    username: rag_user
+    database: rag_database
+    existingSecret: enterprise-rag-secrets
+    secretKeys:
+      adminPasswordKey: POSTGRES_PASSWORD
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1"
+      limits:
+        memory: "4Gi"
+        cpu: "2"
+
+# Redis (using Bitnami chart)
+redis:
+  enabled: true
+  auth:
+    existingSecret: enterprise-rag-secrets
+    existingSecretPasswordKey: REDIS_PASSWORD
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1"
+
+# Qdrant vector database
+qdrant:
+  enabled: true
+  replicaCount: 1
+  
+  persistence:
+    enabled: true
+    size: 100Gi
+  
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "1"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  
+  service:
+    type: ClusterIP
+    httpPort: 6333
+    grpcPort: 6334
+
+# Weaviate vector database
+weaviate:
+  enabled: true
+  replicaCount: 1
+  
+  persistence:
+    enabled: true
+    size: 100Gi
+  
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "1"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  
+  service:
+    type: ClusterIP
+    port: 8080
+
+# MinIO object storage
+minio:
+  enabled: true
+  mode: standalone
+  
+  auth:
+    rootUser: minioadmin
+    existingSecret: enterprise-rag-secrets
+  
+  persistence:
+    enabled: true
+    size: 500Gi
+  
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+  jaeger:
+    enabled: true
+
+# Security
+security:
+  networkPolicy:
+    enabled: true
+  podSecurityPolicy:
+    enabled: true
+  rbac:
+    create: true
+
+# Node selector and tolerations
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,191 @@
+groups:
+- name: rag-system-advanced
+  rules:
+  # Performance Alerts
+  - alert: HighDocumentProcessingLatency
+    expr: histogram_quantile(0.95, sum(rate(rag_agent_processing_duration_seconds_bucket{agent="ingestion"}[5m])) by (le)) > 30
+    for: 2m
+    labels:
+      severity: warning
+      component: ingestion-agent
+    annotations:
+      summary: "High document processing latency detected"
+      description: "Document processing P95 latency is {{ $value }}s, above 30s threshold"
+      runbook_url: "https://docs.rag-system.com/runbooks/high-latency"
+
+  - alert: EmbeddingGenerationSlowdown
+    expr: rate(rag_embeddings_generated_total[5m]) < 10
+    for: 5m
+    labels:
+      severity: warning
+      component: vectorization-agent
+    annotations:
+      summary: "Embedding generation rate is too low"
+      description: "Embedding generation rate is {{ $value }}/sec, below expected 10/sec"
+
+  - alert: VectorStoreCapacityHigh
+    expr: rag_vector_store_size > 1000000
+    for: 1m
+    labels:
+      severity: warning
+      component: vector-store
+    annotations:
+      summary: "Vector store approaching capacity limits"
+      description: "Vector store contains {{ $value }} vectors, consider scaling"
+
+  # Resource Alerts
+  - alert: MemoryUsageHigh
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+    for: 2m
+    labels:
+      severity: critical
+      component: infrastructure
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+
+  - alert: DiskSpaceLow
+    expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"}) > 85
+    for: 5m
+    labels:
+      severity: warning
+      component: infrastructure
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}"
+      description: "Disk usage is {{ $value }}% on {{ $labels.instance }}"
+
+  # Database Alerts
+  - alert: DatabaseConnectionsHigh
+    expr: pg_stat_database_numbackends{datname="rag_db"} > 80
+    for: 2m
+    labels:
+      severity: warning
+      component: database
+    annotations:
+      summary: "High number of database connections"
+      description: "Database has {{ $value }} active connections"
+
+  - alert: DatabaseSlowQueries
+    expr: rate(pg_stat_database_tup_returned{datname="rag_db"}[5m]) / rate(pg_stat_database_tup_fetched{datname="rag_db"}[5m]) < 0.1
+    for: 5m
+    labels:
+      severity: warning
+      component: database
+    annotations:
+      summary: "Database queries are inefficient"
+      description: "Query efficiency ratio is {{ $value }}"
+
+  # Celery Task Queue Alerts
+  - alert: CeleryTaskQueueBacklog
+    expr: celery_tasks_pending > 100
+    for: 3m
+    labels:
+      severity: warning
+      component: task-queue
+    annotations:
+      summary: "Celery task queue has significant backlog"
+      description: "{{ $labels.queue }} queue has {{ $value }} pending tasks"
+
+  - alert: CeleryWorkerDown
+    expr: up{job="celery-worker"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      component: task-queue
+    annotations:
+      summary: "Celery worker is down"
+      description: "Celery worker {{ $labels.instance }} is not responding"
+
+  - alert: CeleryTaskFailureRateHigh
+    expr: rate(celery_tasks_failed_total[5m]) / rate(celery_tasks_total[5m]) > 0.1
+    for: 3m
+    labels:
+      severity: warning
+      component: task-queue
+    annotations:
+      summary: "High Celery task failure rate"
+      description: "Task failure rate is {{ $value }} for queue {{ $labels.queue }}"
+
+  # Business Logic Alerts
+  - alert: FeedbackSentimentDegrading
+    expr: rag_feedback_average_rating < 3.0
+    for: 10m
+    labels:
+      severity: warning
+      component: feedback-agent
+    annotations:
+      summary: "User feedback sentiment is degrading"
+      description: "Average feedback rating is {{ $value }}, below 3.0 threshold"
+
+  - alert: DocumentIngestionStalled
+    expr: rate(rag_documents_processed_total[10m]) == 0
+    for: 5m
+    labels:
+      severity: warning
+      component: ingestion-agent
+    annotations:
+      summary: "Document ingestion has stalled"
+      description: "No documents have been processed in the last 10 minutes"
+
+  # Security Alerts
+  - alert: HighAuthenticationFailures
+    expr: rate(rag_auth_failures_total[5m]) > 10
+    for: 2m
+    labels:
+      severity: warning
+      component: security
+    annotations:
+      summary: "High rate of authentication failures"
+      description: "{{ $value }} authentication failures per second detected"
+
+  - alert: SuspiciousAPIUsage
+    expr: rate(http_requests_total{status=~"4.."}[5m]) > 50
+    for: 3m
+    labels:
+      severity: warning
+      component: security
+    annotations:
+      summary: "High rate of HTTP 4xx errors"
+      description: "{{ $value }} 4xx errors per second, possible attack or misconfiguration"
+
+  # Kubernetes Alerts
+  - alert: PodCrashLooping
+    expr: rate(kube_pod_container_status_restarts_total{namespace="rag-system"}[15m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+      component: kubernetes
+    annotations:
+      summary: "Pod is crash looping"
+      description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+
+  - alert: KubernetesNodeNotReady
+    expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      component: kubernetes
+    annotations:
+      summary: "Kubernetes node not ready"
+      description: "Node {{ $labels.node }} is not ready"
+
+  # External Service Alerts
+  - alert: ExternalAPILatencyHigh
+    expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="external-api"}[5m])) by (le)) > 5
+    for: 3m
+    labels:
+      severity: warning
+      component: external-services
+    annotations:
+      summary: "High latency to external API"
+      description: "P95 latency to external API is {{ $value }}s"
+
+  - alert: ExternalAPIErrorRateHigh
+    expr: rate(http_requests_total{job="external-api",status=~"5.."}[5m]) / rate(http_requests_total{job="external-api"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      component: external-services
+    annotations:
+      summary: "High error rate from external API"
+      description: "External API error rate is {{ $value }}"

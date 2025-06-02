@@ -1,0 +1,220 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "RAG Multi-Agent System - Agents Performance",
+    "tags": ["rag", "agents", "performance"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Ingestion Agent - Document Processing",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": false
+            },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "rate(rag_documents_processed_total{agent=\"ingestion\"}[5m])",
+            "refId": "A",
+            "legendFormat": "Documents/sec"
+          },
+          {
+            "expr": "rate(rag_documents_failed_total{agent=\"ingestion\"}[5m])",
+            "refId": "B",
+            "legendFormat": "Failed/sec"
+          },
+          {
+            "expr": "rag_document_queue_size{agent=\"ingestion\"}",
+            "refId": "C",
+            "legendFormat": "Queue size"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Vectorization Agent - Embeddings",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": false
+            },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "rate(rag_embeddings_generated_total{agent=\"vectorization\"}[5m])",
+            "refId": "A",
+            "legendFormat": "Embeddings/sec"
+          },
+          {
+            "expr": "rag_vector_store_size{agent=\"vectorization\"}",
+            "refId": "B",
+            "legendFormat": "Vector store size"
+          },
+          {
+            "expr": "rate(rag_vector_searches_total{agent=\"vectorization\"}[5m])",
+            "refId": "C",
+            "legendFormat": "Searches/sec"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Feedback Agent - Learning Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": false
+            },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "rate(rag_feedback_received_total{agent=\"feedback\"}[5m])",
+            "refId": "A",
+            "legendFormat": "Feedback/sec"
+          },
+          {
+            "expr": "rag_feedback_average_rating{agent=\"feedback\"}",
+            "refId": "B",
+            "legendFormat": "Avg rating"
+          },
+          {
+            "expr": "rate(rag_model_updates_total{agent=\"feedback\"}[5m])",
+            "refId": "C",
+            "legendFormat": "Model updates/sec"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Agent Response Times",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": false
+            },
+            "unit": "s"
+          }
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(rag_agent_processing_duration_seconds_bucket{agent=\"ingestion\"}[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "Ingestion P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(rag_agent_processing_duration_seconds_bucket{agent=\"vectorization\"}[5m])) by (le))",
+            "refId": "B",
+            "legendFormat": "Vectorization P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(rag_agent_processing_duration_seconds_bucket{agent=\"feedback\"}[5m])) by (le))",
+            "refId": "C",
+            "legendFormat": "Feedback P95"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Celery Task Queue Status",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": false
+            },
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "celery_tasks_active{queue=\"document_processing\"}",
+            "refId": "A",
+            "legendFormat": "Active - Document Processing"
+          },
+          {
+            "expr": "celery_tasks_active{queue=\"vectorization\"}",
+            "refId": "B",
+            "legendFormat": "Active - Vectorization"
+          },
+          {
+            "expr": "celery_tasks_active{queue=\"feedback\"}",
+            "refId": "C",
+            "legendFormat": "Active - Feedback"
+          },
+          {
+            "expr": "celery_tasks_pending{queue=\"document_processing\"}",
+            "refId": "D",
+            "legendFormat": "Pending - Document Processing"
+          },
+          {
+            "expr": "celery_tasks_pending{queue=\"vectorization\"}",
+            "refId": "E",
+            "legendFormat": "Pending - Vectorization"
+          },
+          {
+            "expr": "celery_tasks_pending{queue=\"feedback\"}",
+            "refId": "F",
+            "legendFormat": "Pending - Feedback"
+          }
+        ]
+      }
+    ]
+  }
+}

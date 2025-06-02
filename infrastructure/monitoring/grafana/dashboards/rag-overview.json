@@ -1,0 +1,327 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Enterprise RAG System - Overview",
+    "tags": ["rag", "enterprise", "api"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"axisPlacement": "auto"},
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 100}
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"rag-api\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Response Time (P95)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 2}
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"rag-api\"}[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "95th percentile"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.01},
+                {"color": "red", "value": 0.05}
+              ]
+            },
+            "unit": "percentunit"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"rag-api\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"rag-api\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Error rate"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active Sessions",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 500},
+                {"color": "red", "value": 1000}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "targets": [
+          {
+            "expr": "rag_active_sessions",
+            "refId": "A",
+            "legendFormat": "Active sessions"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Request Volume by Endpoint",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null}
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "options": {
+          "legend": {"calcs": [], "displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single", "sort": "none"}
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"rag-api\"}[5m])) by (endpoint)",
+            "refId": "A",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Response Time Distribution",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null}
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "options": {
+          "legend": {"calcs": [], "displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single", "sort": "none"}
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"rag-api\"}[5m])) by (le))",
+            "refId": "A",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"rag-api\"}[5m])) by (le))",
+            "refId": "B",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"rag-api\"}[5m])) by (le))",
+            "refId": "C",
+            "legendFormat": "P99"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "RAG-Specific Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 9, "w": 24, "x": 0, "y": 17},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "legend": {"calcs": [], "displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single", "sort": "none"}
+        },
+        "targets": [
+          {
+            "expr": "rate(rag_documents_processed_total[5m])",
+            "refId": "A",
+            "legendFormat": "Documents processed/sec"
+          },
+          {
+            "expr": "rate(rag_embeddings_generated_total[5m])",
+            "refId": "B",
+            "legendFormat": "Embeddings generated/sec"
+          },
+          {
+            "expr": "rate(rag_feedback_received_total[5m])",
+            "refId": "C",
+            "legendFormat": "Feedback received/sec"
+          }
+        ]
+      }
+    ]
+  }
+}

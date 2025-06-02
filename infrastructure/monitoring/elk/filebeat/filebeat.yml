@@ -1,0 +1,71 @@
+filebeat.inputs:
+- type: container
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+    - decode_json_fields:
+        fields: ["message"]
+        target: ""
+        overwrite_keys: true
+  fields:
+    logtype: docker
+  fields_under_root: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/rag/*.log
+  fields:
+    logtype: application
+    service: rag-system
+  fields_under_root: true
+  multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+  multiline.negate: true
+  multiline.match: after
+
+# Processors
+processors:
+- add_host_metadata:
+    when.not.contains.tags: forwarded
+- add_cloud_metadata: ~
+- add_docker_metadata: ~
+- add_kubernetes_metadata: ~
+
+# Output configuration
+output.logstash:
+  hosts: ["logstash:5044"]
+
+# Monitoring
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+
+# Logging
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /usr/share/filebeat/logs
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# Template settings
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+# ILM policy
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "filebeat"
+setup.ilm.pattern: "{now/d}-000001"
+setup.ilm.policy: "rag-logs-policy"
+
+# Performance tuning
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: 1s
+
+filebeat.shutdown_timeout: 5s
