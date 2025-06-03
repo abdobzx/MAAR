@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-06-03T12:00:00.000Z" agent="5.0" etag="xyz" version="22.1.8" type="device">
+  <diagram name="RAG-Simplified-Architecture" id="simplified-diagram">
+    <mxGraphModel dx="2336" dy="1654" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2336" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="Architecture Simplifiée RAG Enterprise" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1;fontColor=#1976D2;" vertex="1" parent="1">
+          <mxGeometry x="668" y="20" width="1000" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Client Layer -->
+        <mxCell id="client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- API Gateway -->
+        <mxCell id="api-gateway" value="API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#F57C00;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Multi-Agent System -->
+        <mxCell id="multi-agents" value="Agents Multi-Agents" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Data Layer -->
+        <mxCell id="data-layer" value="Données & Stockage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#D32F2F;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- External Services -->
+        <mxCell id="external-services" value="Services Externes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Monitoring & Security -->
+        <mxCell id="monitoring-security" value="Monitoring & Sécurité" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#455A64;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="100" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#1976D2;" edge="1" parent="1" source="client" target="api-gateway">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#F57C00;" edge="1" parent="1" source="api-gateway" target="multi-agents">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="conn3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#7B1FA2;" edge="1" parent="1" source="multi-agents" target="data-layer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="conn4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#D32F2F;" edge="1" parent="1" source="data-layer" target="external-services">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="conn5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#455A64;" edge="1" parent="1" source="external-services" target="monitoring-security">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
