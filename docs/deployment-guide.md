@@ -344,7 +344,7 @@ trivy image rag-system:latest
 ### Contacts d'Urgence
 - **Équipe DevOps** : devops@mysothemalab.com  
 - **Équipe Sécurité** : security@mysothemalab.com
-- **Astreinte 24/7** : +33 X XX XX XX XX
+- **Astreinte 24/7** : +212 X XX XX XX XX
 
 ### Procédures d'Escalade
 1. **P1 (Critique)** : Service indisponible → Escalade immédiate
