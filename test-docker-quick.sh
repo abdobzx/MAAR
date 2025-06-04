@@ -31,12 +31,7 @@ echo "2️⃣ Test compatibilité httpx/ollama..."
 
 docker run --rm python:3.11-slim sh -c "
 pip install 'ollama==0.5.1' 'httpx>=0.27.0,<0.29.0' --quiet &&
-python -c '
-import ollama, httpx
-print(f\"✅ ollama: {getattr(ollama, \"__version__\", \"OK\")}\")+
-print(f\"✅ httpx: {httpx.__version__}\")
-print(\"✅ Compatibilité confirmée\")
-' || echo '❌ Incompatibilité détectée'
+python -c 'import ollama, httpx; print(f\"✅ ollama: {getattr(ollama, \"__version__\", \"OK\")}\"); print(f\"✅ httpx: {httpx.__version__}\"); print(\"✅ Compatibilité confirmée\")' || echo '❌ Incompatibilité détectée'
 "
 
 echo ""

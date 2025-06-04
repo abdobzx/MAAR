@@ -54,16 +54,16 @@ COPY api/ ./api/
 COPY core/ ./core/
 
 # Test d'import
-RUN python -c "
-try:
-    import fastapi
-    import uvicorn
-    import ollama
-    import httpx
-    print('✅ Imports principaux réussis')
-except ImportError as e:
-    print(f'❌ Erreur d\\'import: {e}')
-    exit(1)
+RUN python -c "\
+try:\
+    import fastapi;\
+    import uvicorn;\
+    import ollama;\
+    import httpx;\
+    print('✅ Imports principaux réussis')\
+except ImportError as e:\
+    print(f'❌ Erreur d\\'import: {e}');\
+    exit(1)\
 "
 
 EXPOSE 8000
@@ -83,33 +83,26 @@ echo ""
 echo "📦 3. Test détaillé des dépendances..."
 
 # Test dans un conteneur temporaire
-docker run --rm $TEST_IMAGE_NAME python -c "
-import sys
-print(f'Python version: {sys.version}')
-
-try:
-    import ollama
-    import httpx
-    print(f'✅ ollama version: {ollama.__version__ if hasattr(ollama, \"__version__\") else \"imported\"}')
-    print(f'✅ httpx version: {httpx.__version__}')
-    
-    import fastapi
-    import uvicorn
-    print(f'✅ FastAPI version: {fastapi.__version__}')
-    
-    import qdrant_client
-    print(f'✅ Qdrant client version: {qdrant_client.__version__}')
-    
-    # Test de compatibilité httpx/ollama
-    client = httpx.Client()
-    print('✅ httpx.Client() fonctionne')
-    client.close()
-    
-    print('✅ Tous les imports critiques réussis')
-    
-except Exception as e:
-    print(f'❌ Erreur: {e}')
-    sys.exit(1)
+docker run --rm $TEST_IMAGE_NAME python -c "\
+import sys;\
+print(f'Python version: {sys.version}');\
+try:\
+    import ollama;\
+    import httpx;\
+    print(f'✅ ollama version: {getattr(ollama, \"__version__\", \"imported\")}');\
+    print(f'✅ httpx version: {httpx.__version__}');\
+    import fastapi;\
+    import uvicorn;\
+    print(f'✅ FastAPI version: {fastapi.__version__}');\
+    import qdrant_client;\
+    print(f'✅ Qdrant client version: {qdrant_client.__version__}');\
+    client = httpx.Client();\
+    print('✅ httpx.Client() fonctionne');\
+    client.close();\
+    print('✅ Tous les imports critiques réussis')\
+except Exception as e:\
+    print(f'❌ Erreur: {e}');\
+    sys.exit(1)\
 "
 
 # 4. Test du fichier de configuration staging
