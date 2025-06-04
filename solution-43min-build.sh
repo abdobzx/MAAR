@@ -41,13 +41,22 @@ if [ ! -f "requirements.fast.txt" ]; then
 fastapi==0.108.0
 uvicorn[standard]==0.25.0
 pydantic>=2.9.0,<3.0.0
-langchain>=0.2.0,<0.4.0
+langchain==0.3.24
+langchain-community==0.3.24
 langsmith>=0.1.17,<0.4.0
 ollama>=0.5.1
 httpx>=0.27.0,<0.29.0
 qdrant-client>=1.7.1,<1.15.0
 python-dotenv>=1.0.0
 EOF
+else
+    # Correction versions LangChain si nécessaire
+    if grep -q "langchain.*==0.3.25" requirements.fast.txt; then
+        log "🔧 Correction versions LangChain 0.3.25 → 0.3.24..."
+        sed -i.bak 's/langchain==0.3.25/langchain==0.3.24/g' requirements.fast.txt
+        sed -i.bak 's/langchain-community==0.3.25/langchain-community==0.3.24/g' requirements.fast.txt
+        log "✅ Versions LangChain corrigées"
+    fi
 fi
 
 if [ ! -f "Dockerfile.fast" ]; then
