@@ -65,9 +65,15 @@ services:
       - ENVIRONMENT=staging
       - DEBUG=false
       - AUTO_MIGRATE=true
-      - WORKERS=4
-    env_file:
-      - .env.staging
+      - WORKERS=2
+      # Database
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      # Redis
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+      # Vector DB
+      - QDRANT_URL=http://qdrant:6333
+      # Security
+      - SECURITY_SECRET_KEY=staging-secret-key-change-in-production
     ports:
       - "8000:8000"
     depends_on:
@@ -86,6 +92,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./uploads:/app/uploads
     deploy:
       resources:
         limits:
@@ -99,15 +109,15 @@ services:
   celery_worker:
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.staging
       target: production
     container_name: rag_celery_staging
-    command: celery -A core.celery worker --loglevel=info --concurrency=4 --max-tasks-per-child=1000
+    command: celery -A core.celery worker --loglevel=info --concurrency=2
     environment:
       - ENVIRONMENT=staging
-      - C_FORCE_ROOT=1
-    env_file:
-      - .env.staging
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
     depends_on:
       postgres:
         condition: service_healthy
@@ -116,35 +126,37 @@ services:
     networks:
       - rag_network
     restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: "1.0"
-        reservations:
           memory: 1G
           cpus: "0.5"
 
-  # Nginx avec configuration optimisée
-  nginx:
-    image: nginx:alpine
-    container_name: rag_nginx_staging
-    volumes:
-      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./infrastructure/docker/nginx/ssl:/etc/nginx/ssl:ro
-    ports:
-      - "80:80"
-      - "443:443"
+  # Celery Beat pour les tâches planifiées
+  celery_beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile.staging
+      target: production
+    container_name: rag_beat_staging
+    command: celery -A core.celery beat --loglevel=info
+    environment:
+      - ENVIRONMENT=staging
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      - REDIS_URL=redis://:redis_password@redis:6379/0
     depends_on:
-      - rag_api
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - rag_network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+    volumes:
+      - ./logs:/app/logs
 
 networks:
   rag_network:
