@@ -22,11 +22,13 @@ COPY requirements.txt .
 
 # Test d'installation des dépendances critiques
 RUN pip install --no-cache-dir "pydantic>=2.9.0,<3.0.0"
+RUN pip install --no-cache-dir "langsmith>=0.1.17,<0.4.0"
 RUN pip install --no-cache-dir "ollama==0.5.1"
 RUN pip install --no-cache-dir "httpx>=0.27.0,<0.29.0"
+RUN pip install --no-cache-dir "langchain>=0.2.0"
 
 # Validation Python simple
-RUN python -c "import pydantic; import ollama; import httpx; print('✅ Pydantic version:', pydantic.VERSION); print('✅ Ollama importé avec succès'); print('✅ HTTPx importé avec succès'); print('✅ Toutes les dépendances critiques sont compatibles!')"
+RUN python -c "import pydantic; import ollama; import httpx; import langchain; import langsmith; print('✅ Pydantic version:', pydantic.VERSION); print('✅ LangChain version:', langchain.__version__); print('✅ LangSmith version:', langsmith.__version__); print('✅ Ollama importé avec succès'); print('✅ HTTPx importé avec succès'); print('✅ Toutes les dépendances critiques sont compatibles!')"
 
 CMD ["echo", "Test terminé avec succès"]
 EOF
@@ -38,8 +40,9 @@ docker build -f Dockerfile.pydantic-test -t pydantic-test-fix . || {
     exit 1
 }
 
-echo "✅ SUCCESS: Fix pydantic validé!"
+echo "✅ SUCCESS: Tous les fixes de compatibilité validés!"
 echo "✅ pydantic>=2.9.0 compatible avec ollama==0.5.1"
+echo "✅ langsmith>=0.1.17 compatible avec langchain>=0.2.0"
 echo "✅ Toutes les dépendances critiques installées"
 
 # Nettoyage

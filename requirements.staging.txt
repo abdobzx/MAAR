@@ -50,7 +50,7 @@ cryptography>=41.0.0
 prometheus-client>=0.19.0
 opentelemetry-api>=1.22.0
 opentelemetry-sdk>=1.22.0
-langsmith>=0.0.69
+langsmith>=0.1.17,<0.4.0
 
 # HTTP Client - Compatible avec ollama (CRITIQUE)
 httpx>=0.27.0,<0.29.0
@@ -116,7 +116,7 @@ opentelemetry-api>=1.21.0
 opentelemetry-sdk>=1.21.0
 opentelemetry-instrumentation-fastapi>=0.42b0
 opentelemetry-exporter-jaeger>=1.21.0
-langsmith>=0.0.69
+langsmith>=0.1.17,<0.4.0
 
 # HTTP Client - Compatible with ollama
 httpx>=0.27.0,<0.29.0
