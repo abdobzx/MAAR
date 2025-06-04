@@ -35,3 +35,6 @@ celery==5.3.4
 # Document processing minimal
 pypdf2==3.0.1
 python-multipart==0.0.6
+
+# Instructor
+instructor==1.8.3
