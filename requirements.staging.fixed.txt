@@ -1,6 +1,4 @@
-# Core Frame# Vector Database & Search
-qdrant-client>=1.7.1,<1.15.0
-weaviate-client==3.25.3k
+# Core Framework
 fastapi>=0.108.0
 uvicorn[standard]>=0.25.0
 pydantic>=2.5.0

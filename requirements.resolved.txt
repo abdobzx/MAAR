@@ -11,7 +11,7 @@ langchain-community>=0.2.0
 langgraph>=0.0.55
 
 # Vector Database & Search
-qdrant-client>=1.7.1,<1.15.0
+qdrant-client==1.7.0
 weaviate-client==3.25.3
 elasticsearch==8.11.1
 rank-bm25==0.2.2
