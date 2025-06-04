@@ -342,9 +342,9 @@ trivy image rag-system:latest
 ## Support et Escalade
 
 ### Contacts d'Urgence
-- **Équipe DevOps** : devops@company.com
-- **Équipe Sécurité** : security@company.com
-- **Astreinte 24/7** : +33 X XX XX XX XX
+- **Équipe DevOps** : devops@mysothemalab.com  
+- **Équipe Sécurité** : security@mysothemalab.com
+- **Astreinte 24/7** : +212 X XX XX XX XX
 
 ### Procédures d'Escalade
 1. **P1 (Critique)** : Service indisponible → Escalade immédiate
