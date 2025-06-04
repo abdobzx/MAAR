@@ -26,15 +26,7 @@ RUN pip install --no-cache-dir ollama==0.5.1
 RUN pip install --no-cache-dir httpx>=0.27.0,<0.29.0
 
 # Validation Python simple
-RUN python -c "
-import pydantic
-import ollama
-import httpx
-print('✅ Pydantic version:', pydantic.VERSION)
-print('✅ Ollama importé avec succès')
-print('✅ HTTPx importé avec succès')
-print('✅ Toutes les dépendances critiques sont compatibles!')
-"
+RUN python -c "import pydantic; import ollama; import httpx; print('✅ Pydantic version:', pydantic.VERSION); print('✅ Ollama importé avec succès'); print('✅ HTTPx importé avec succès'); print('✅ Toutes les dépendances critiques sont compatibles!')"
 
 CMD ["echo", "Test terminé avec succès"]
 EOF
