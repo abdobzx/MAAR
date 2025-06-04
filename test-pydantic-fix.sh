@@ -21,9 +21,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Test d'installation des dépendances critiques
-RUN pip install --no-cache-dir pydantic>=2.9.0,<3.0.0
-RUN pip install --no-cache-dir ollama==0.5.1
-RUN pip install --no-cache-dir httpx>=0.27.0,<0.29.0
+RUN pip install --no-cache-dir "pydantic>=2.9.0,<3.0.0"
+RUN pip install --no-cache-dir "ollama==0.5.1"
+RUN pip install --no-cache-dir "httpx>=0.27.0,<0.29.0"
 
 # Validation Python simple
 RUN python -c "import pydantic; import ollama; import httpx; print('✅ Pydantic version:', pydantic.VERSION); print('✅ Ollama importé avec succès'); print('✅ HTTPx importé avec succès'); print('✅ Toutes les dépendances critiques sont compatibles!')"
