@@ -73,6 +73,6 @@ pre-commit==3.6.0
  kubernetes==28.1.0
  azure-identity==1.15.0
  azure-storage-blob==12.19.0
-boto3==1.34.0
-instructor>=1.6.0,<2.0.0  # version compatible tenacity<9.0.0
+ boto3==1.34.0
+ instructor==1.6.0  # version compatible tenacity<9.0.0
  tenacity==8.2.2
