@@ -61,7 +61,12 @@ class AuthorizationError(RAGSystemException):
 
 
 class ValidationError(RAGSystemException):
-    """Raised when data validation fails."""
+    """Raised when validation fails."""
+    pass
+
+
+class ProcessingError(RAGSystemException):
+    """Raised when processing operations fail."""
     pass
 
 
@@ -92,6 +97,11 @@ class ResourceNotFoundError(RAGSystemException):
 
 class DuplicateResourceError(RAGSystemException):
     """Raised when trying to create a duplicate resource."""
+    pass
+
+
+class OrchestrationError(RAGSystemException):
+    """Raised when orchestration operations fail."""
     pass
 
 

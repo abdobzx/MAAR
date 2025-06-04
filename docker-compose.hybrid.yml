@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # API FastAPI - Image optimisée
+  rag-api:
+    build: 
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ENVIRONMENT=production
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # Agents de traitement - Image spécialisée  
+  rag-agents:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/agents.Dockerfile
+    deploy:
+      replicas: 3
+    command: celery -A core.celery worker --loglevel=info --concurrency=2
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ENVIRONMENT=production
+
+  # Scheduler - Image légère
+  rag-scheduler:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/scheduler.Dockerfile
+    deploy:
+      replicas: 1
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ENVIRONMENT=production
+
+  # Bases de données (inchangées)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: rag_database
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: rag_network

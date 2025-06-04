@@ -12,10 +12,10 @@ from pydantic_settings import BaseSettings
 class DatabaseSettings(BaseSettings):
     """Database configuration settings."""
     
-    url: str = Field("postgresql://user:password@localhost:5432/mar_test", env="DATABASE_URL")
-    echo: bool = Field(False, env="DATABASE_ECHO")
-    pool_size: int = Field(10, env="DATABASE_POOL_SIZE")
-    max_overflow: int = Field(20, env="DATABASE_MAX_OVERFLOW")
+    url: str = Field(default="postgresql://user:password@localhost:5432/mar_test")
+    echo: bool = Field(default=False)
+    pool_size: int = Field(default=10)
+    max_overflow: int = Field(default=20)
     
     model_config = {
         "env_prefix": "DATABASE_",
@@ -26,10 +26,10 @@ class DatabaseSettings(BaseSettings):
 class RedisSettings(BaseSettings):
     """Redis configuration settings."""
     
-    url: str = Field("redis://localhost:6379/0", env="REDIS_URL")
-    password: Optional[str] = Field(None, env="REDIS_PASSWORD")
-    db: int = Field(0, env="REDIS_DB")
-    max_connections: int = Field(20, env="REDIS_MAX_CONNECTIONS")
+    url: str = Field(default="redis://localhost:6379/0")
+    password: Optional[str] = Field(default=None)
+    db: int = Field(default=0)
+    max_connections: int = Field(default=20)
     
     model_config = {
         "env_prefix": "REDIS_",
@@ -41,18 +41,18 @@ class VectorDBSettings(BaseSettings):
     """Vector database configuration settings."""
     
     # Qdrant settings
-    qdrant_host: str = Field("localhost", env="QDRANT_HOST")
-    qdrant_port: int = Field(6333, env="QDRANT_PORT")
-    qdrant_api_key: Optional[str] = Field(None, env="QDRANT_API_KEY")
-    qdrant_collection_name: str = Field("documents", env="QDRANT_COLLECTION_NAME")
+    qdrant_host: str = Field(default="localhost")
+    qdrant_port: int = Field(default=6333)
+    qdrant_api_key: Optional[str] = Field(default=None)
+    qdrant_collection_name: str = Field(default="documents")
     
     # Weaviate settings
-    weaviate_url: str = Field("http://localhost:8080", env="WEAVIATE_URL")
-    weaviate_api_key: Optional[str] = Field(None, env="WEAVIATE_API_KEY")
-    weaviate_class_name: str = Field("Document", env="WEAVIATE_CLASS_NAME")
+    weaviate_url: str = Field(default="http://localhost:8080")
+    weaviate_api_key: Optional[str] = Field(default=None)
+    weaviate_class_name: str = Field(default="Document")
     
     # Default vector database
-    default_provider: str = Field("qdrant", env="VECTOR_DB_PROVIDER")
+    default_provider: str = Field(default="qdrant")
     
     @field_validator("default_provider")
     @classmethod
@@ -62,37 +62,42 @@ class VectorDBSettings(BaseSettings):
             raise ValueError(f"Vector DB provider must be one of {allowed}")
         return v
 
+    model_config = {
+        "env_prefix": "VECTOR_DB_",
+        "case_sensitive": False
+    }
+
 
 class LLMSettings(BaseSettings):
     """LLM configuration settings."""
     
     # Cohere settings
-    cohere_api_key: Optional[str] = Field(None, env="COHERE_API_KEY")
-    cohere_model: str = Field("command-r-plus", env="COHERE_MODEL")
+    cohere_api_key: Optional[str] = Field(default=None)
+    cohere_model: str = Field(default="command-r-plus")
     
     # Ollama settings
-    ollama_base_url: str = Field("http://localhost:11434", env="OLLAMA_BASE_URL")
-    ollama_model: str = Field("llama3:8b", env="OLLAMA_MODEL")
+    ollama_base_url: str = Field(default="http://localhost:11434")
+    ollama_model: str = Field(default="llama3:8b")
     
-    # Embedding settings (using sentence-transformers as default)
-    embedding_model: str = Field("all-MiniLM-L6-v2", env="EMBEDDING_MODEL")
-    embedding_dimension: int = Field(384, env="EMBEDDING_DIMENSION")
+    # Embedding settings
+    embedding_model: str = Field(default="all-MiniLM-L6-v2")
+    embedding_dimension: int = Field(default=384)
     
-    # Default LLM provider (SothemaAI focused)
-    default_provider: str = Field("sothemaai", env="LLM_PROVIDER")
+    # Default LLM provider
+    default_provider: str = Field(default="sothemaai")
     
     @field_validator("default_provider")
     @classmethod
     def validate_llm_provider(cls, v):
-        allowed = ["sothemaai", "cohere", "ollama"]  # OpenAI removed
+        allowed = ["sothemaai", "cohere", "ollama"]
         if v not in allowed:
             raise ValueError(f"LLM provider must be one of {allowed}")
         return v
     
     # Configuration SothemaAI
-    sothemaai_base_url: Optional[str] = Field(None, env="SOTHEMAAI_BASE_URL")
-    sothemaai_api_key: Optional[str] = Field(None, env="SOTHEMAAI_API_KEY")
-    sothemaai_timeout: int = Field(30, env="SOTHEMAAI_TIMEOUT")
+    sothemaai_base_url: Optional[str] = Field(default=None)
+    sothemaai_api_key: Optional[str] = Field(default=None)
+    sothemaai_timeout: int = Field(default=30)
     
     model_config = {
         "env_prefix": "LLM_",
@@ -103,22 +108,19 @@ class LLMSettings(BaseSettings):
 class SecuritySettings(BaseSettings):
     """Security configuration settings."""
     
-    secret_key: str = Field(..., env="SECRET_KEY")
-    algorithm: str = Field("HS256", env="JWT_ALGORITHM")
-    access_token_expire_minutes: int = Field(30, env="JWT_EXPIRE_MINUTES")
-    refresh_token_expire_days: int = Field(7, env="JWT_REFRESH_EXPIRE_DAYS")
+    secret_key: str = Field(...)
+    algorithm: str = Field(default="HS256")
+    access_token_expire_minutes: int = Field(default=30)
+    refresh_token_expire_days: int = Field(default=7)
     
     # Keycloak settings
-    keycloak_server_url: Optional[str] = Field(None, env="KEYCLOAK_SERVER_URL")
-    keycloak_realm: Optional[str] = Field(None, env="KEYCLOAK_REALM")
-    keycloak_client_id: Optional[str] = Field(None, env="KEYCLOAK_CLIENT_ID")
-    keycloak_client_secret: Optional[str] = Field(None, env="KEYCLOAK_CLIENT_SECRET")
+    keycloak_server_url: Optional[str] = Field(default=None)
+    keycloak_realm: Optional[str] = Field(default=None)
+    keycloak_client_id: Optional[str] = Field(default=None)
+    keycloak_client_secret: Optional[str] = Field(default=None)
     
     # CORS settings
-    cors_origins: List[str] = Field(
-        ["http://localhost:3000", "http://localhost:8080"],
-        env="CORS_ORIGINS"
-    )
+    cors_origins: List[str] = Field(default=["http://localhost:3000", "http://localhost:8080"])
     
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -127,23 +129,25 @@ class SecuritySettings(BaseSettings):
             return [origin.strip() for origin in v.split(",")]
         return v
 
+    model_config = {
+        "env_prefix": "SECURITY_",
+        "case_sensitive": False
+    }
+
 
 class StorageSettings(BaseSettings):
     """Storage configuration settings."""
     
     # MinIO/S3 settings
-    endpoint: str = Field("localhost:9000", env="MINIO_ENDPOINT")
-    access_key: str = Field("minioadmin", env="MINIO_ACCESS_KEY")
-    secret_key: str = Field("minioadmin", env="MINIO_SECRET_KEY")
-    bucket_name: str = Field("rag-documents", env="MINIO_BUCKET_NAME")
-    secure: bool = Field(False, env="MINIO_SECURE")
+    endpoint: str = Field(default="localhost:9000")
+    access_key: str = Field(default="minioadmin")
+    secret_key: str = Field(default="minioadmin")
+    bucket_name: str = Field(default="rag-documents")
+    secure: bool = Field(default=False)
     
     # File processing settings
-    max_file_size_mb: int = Field(100, env="MAX_FILE_SIZE_MB")
-    allowed_extensions: List[str] = Field(
-        [".pdf", ".docx", ".txt", ".md", ".html", ".mp3", ".wav", ".m4a"],
-        env="ALLOWED_EXTENSIONS"
-    )
+    max_file_size_mb: int = Field(default=100)
+    allowed_extensions: List[str] = Field(default=[".pdf", ".docx", ".txt", ".md", ".html", ".mp3", ".wav", ".m4a"])
     
     @field_validator("allowed_extensions", mode="before")
     @classmethod
@@ -152,99 +156,82 @@ class StorageSettings(BaseSettings):
             return [ext.strip() for ext in v.split(",")]
         return v
 
+    model_config = {
+        "env_prefix": "STORAGE_",
+        "case_sensitive": False
+    }
+
 
 class ProcessingSettings(BaseSettings):
-    """Document processing configuration settings."""
+    """Processing configuration settings."""
     
-    # Chunking settings
-    chunk_size: int = Field(1000, env="CHUNK_SIZE")
-    chunk_overlap: int = Field(200, env="CHUNK_OVERLAP")
+    # Document processing
+    max_workers: int = Field(default=4)
+    chunk_size: int = Field(default=1000)
+    chunk_overlap: int = Field(default=200)
+    
+    # Audio processing
+    whisper_model: str = Field(default="tiny")
+    audio_sample_rate: int = Field(default=16000)
     
     # OCR settings
-    ocr_language: str = Field("eng", env="OCR_LANGUAGE")
-    ocr_confidence_threshold: float = Field(0.7, env="OCR_CONFIDENCE_THRESHOLD")
+    tesseract_lang: str = Field(default="fra+eng")
     
-    # Audio processing settings
-    whisper_model: str = Field("base", env="WHISPER_MODEL")
-    audio_chunk_duration: int = Field(30, env="AUDIO_CHUNK_DURATION")
-    
-    # Concurrency settings
-    max_concurrent_requests: int = Field(10, env="MAX_CONCURRENT_REQUESTS")
-    max_workers: int = Field(4, env="MAX_WORKERS")
+    model_config = {
+        "env_prefix": "PROCESSING_",
+        "case_sensitive": False
+    }
 
 
 class CelerySettings(BaseSettings):
     """Celery configuration settings."""
     
-    broker_url: str = Field("redis://localhost:6379/1", env="CELERY_BROKER_URL")
-    result_backend: str = Field("redis://localhost:6379/2", env="CELERY_RESULT_BACKEND")
+    broker_url: str = Field(default="redis://localhost:6379/1")
+    result_backend: str = Field(default="redis://localhost:6379/1")
+    task_serializer: str = Field(default="json")
+    result_serializer: str = Field(default="json")
+    accept_content: List[str] = Field(default=["json"])
+    timezone: str = Field(default="UTC")
+    enable_utc: bool = Field(default=True)
     
-    # Worker settings
-    worker_concurrency: int = Field(4, env="CELERY_WORKER_CONCURRENCY")
-    worker_prefetch_multiplier: int = Field(1, env="CELERY_WORKER_PREFETCH_MULTIPLIER")
-    
-    # Task settings
-    task_soft_time_limit: int = Field(300, env="CELERY_TASK_SOFT_TIME_LIMIT")
-    task_time_limit: int = Field(600, env="CELERY_TASK_TIME_LIMIT")
-    task_max_retries: int = Field(3, env="CELERY_TASK_MAX_RETRIES")
-    task_default_retry_delay: int = Field(60, env="CELERY_TASK_DEFAULT_RETRY_DELAY")
-    
-    # Result settings
-    result_expires: int = Field(3600, env="CELERY_RESULT_EXPIRES")
+    model_config = {
+        "env_prefix": "CELERY_",
+        "case_sensitive": False
+    }
 
 
 class MonitoringSettings(BaseSettings):
-    """Monitoring and observability settings."""
+    """Monitoring configuration settings."""
     
     # Prometheus settings
-    prometheus_port: int = Field(9090, env="PROMETHEUS_PORT")
-    metrics_enabled: bool = Field(True, env="METRICS_ENABLED")
+    prometheus_enabled: bool = Field(default=True)
+    prometheus_port: int = Field(default=8090)
     
-    # Tracing settings
-    jaeger_endpoint: Optional[str] = Field(None, env="JAEGER_ENDPOINT")
-    tracing_enabled: bool = Field(True, env="TRACING_ENABLED")
+    # Grafana settings
+    grafana_url: str = Field(default="http://localhost:3000")
+    grafana_api_key: Optional[str] = Field(default=None)
     
-    # Logging settings
-    log_level: str = Field("INFO", env="LOG_LEVEL")
-    log_format: str = Field("json", env="LOG_FORMAT")
+    # ELK settings
+    elasticsearch_url: str = Field(default="http://localhost:9200")
+    kibana_url: str = Field(default="http://localhost:5601")
     
-    # LangSmith settings
-    langsmith_api_key: Optional[str] = Field(None, env="LANGSMITH_API_KEY")
-    langsmith_project: str = Field("enterprise-rag", env="LANGSMITH_PROJECT")
+    # Health check settings
+    health_check_interval: int = Field(default=30)
     
-    @field_validator("log_level")
-    @classmethod
-    def validate_log_level(cls, v):
-        allowed = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        if v.upper() not in allowed:
-            raise ValueError(f"Log level must be one of {allowed}")
-        return v.upper()
+    model_config = {
+        "env_prefix": "MONITORING_",
+        "case_sensitive": False
+    }
 
 
 class Settings(BaseSettings):
     """Main application settings."""
     
     # Application settings
-    app_name: str = Field("Enterprise RAG System", env="APP_NAME")
-    app_version: str = Field("1.0.0", env="APP_VERSION")
-    environment: str = Field("development", env="ENVIRONMENT")
-    debug: bool = Field(False, env="DEBUG")
-    
-    # API settings
-    api_host: str = Field("0.0.0.0", env="API_HOST")
-    api_port: int = Field(8000, env="API_PORT")
-    api_prefix: str = Field("/api/v1", env="API_PREFIX")
-    
-    # Component settings
-    database: DatabaseSettings = DatabaseSettings()
-    redis: RedisSettings = RedisSettings()
-    vector_db: VectorDBSettings = VectorDBSettings()
-    llm: LLMSettings = LLMSettings()
-    security: SecuritySettings = SecuritySettings()
-    storage: StorageSettings = StorageSettings()
-    processing: ProcessingSettings = ProcessingSettings()
-    celery: CelerySettings = CelerySettings()
-    monitoring: MonitoringSettings = MonitoringSettings()
+    app_name: str = Field(default="Enterprise RAG System")
+    version: str = Field(default="1.0.0")
+    debug: bool = Field(default=False)
+    environment: str = Field(default="development")
     
     @field_validator("environment")
     @classmethod
@@ -254,10 +241,16 @@ class Settings(BaseSettings):
             raise ValueError(f"Environment must be one of {allowed}")
         return v
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    # Component settings
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
+    redis: RedisSettings = Field(default_factory=RedisSettings)
+    vector_db: VectorDBSettings = Field(default_factory=VectorDBSettings)
+    llm: LLMSettings = Field(default_factory=LLMSettings)
+    security: SecuritySettings = Field(default_factory=SecuritySettings)
+    storage: StorageSettings = Field(default_factory=StorageSettings)
+    processing: ProcessingSettings = Field(default_factory=ProcessingSettings)
+    celery: CelerySettings = Field(default_factory=CelerySettings)
+    monitoring: MonitoringSettings = Field(default_factory=MonitoringSettings)
     
     model_config = {
         "env_file": ".env",
@@ -273,4 +266,14 @@ def get_settings() -> Settings:
 
 
 # Export settings instance
-settings = get_settings()
+
+
+# Export settings instance - lazy initialization
+settings = None
+
+def get_app_settings() -> Settings:
+    """Get application settings with lazy initialization."""
+    global settings
+    if settings is None:
+        settings = get_settings()
+    return settings

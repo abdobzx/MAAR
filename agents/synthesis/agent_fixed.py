@@ -5,6 +5,7 @@ Handles LLM-based response generation with citations and source tracking.
 
 import asyncio
 import json
+import re
 from typing import Any, Dict, List, Optional, Union, AsyncIterator
 from uuid import UUID, uuid4
 
@@ -435,8 +436,6 @@ class CitationManager:
     
     def get_citations(self, response_text: str) -> List[Dict[str, Any]]:
         """Extract citations from response text."""
-        import re
-        
         citations = []
         # Find all citation patterns like [Source: 1] or [Source: ID]
         citation_pattern = r'\[Source:\s*(\d+)\]'
@@ -529,9 +528,9 @@ class SynthesisAgent(LoggerMixin):
         providers = {}
         
         # Cohere
-        if settings.llm.cohere_api_key:
+        if hasattr(settings.llm, 'cohere_api_key') and settings.llm.cohere_api_key:
             config = LLMConfig(
-                model=settings.llm.cohere_model,
+                model=getattr(settings.llm, 'cohere_model', 'command-r-plus'),
                 provider="cohere",
                 temperature=0.1,
                 max_tokens=4000,
@@ -541,7 +540,7 @@ class SynthesisAgent(LoggerMixin):
         
         # Ollama
         config = LLMConfig(
-            model=settings.llm.ollama_model,
+            model=getattr(settings.llm, 'ollama_model', 'llama2'),
             provider="ollama",
             temperature=0.1,
             max_tokens=4000,
@@ -553,7 +552,7 @@ class SynthesisAgent(LoggerMixin):
     
     def _get_default_provider(self) -> LLMProvider:
         """Get the default LLM provider."""
-        provider_name = settings.llm.default_provider
+        provider_name = getattr(settings.llm, 'default_provider', 'ollama')
         
         # Priorité à SothemaAI si USE_SOTHEMAAI_ONLY est activé
         use_sothemaai_only = getattr(settings, 'USE_SOTHEMAAI_ONLY', False)
@@ -721,7 +720,7 @@ class SynthesisAgent(LoggerMixin):
         """Save query and response to database."""
         try:
             db_query = DBQuery(
-                id=query_response.message_id,
+                id=getattr(query_response, 'message_id', uuid4()),
                 user_id=query_request.user_id,
                 conversation_id=query_response.conversation_id,
                 query_text=query_request.query,
@@ -730,7 +729,7 @@ class SynthesisAgent(LoggerMixin):
                 confidence=query_response.confidence,
                 tokens_used=query_response.tokens_used,
                 execution_time=query_response.execution_time,
-                context=query_request.context
+                context=getattr(query_request, 'context', {})
             )
             
             db_session.add(db_query)

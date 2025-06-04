@@ -156,6 +156,14 @@ class AIProviderManager:
                 logger.error(f"Health check échoué pour {name}: {e}")
                 health_status[name] = False
         return health_status
+    
+    def has_provider(self, provider_name: str) -> bool:
+        """Vérifie si un fournisseur est disponible"""
+        return provider_name in self.providers
+        
+    def get_available_providers(self) -> List[str]:
+        """Retourne la liste des fournisseurs disponibles"""
+        return list(self.providers.keys())
 
 # Instance globale du gestionnaire
 provider_manager = AIProviderManager()

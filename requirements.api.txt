@@ -1,0 +1,23 @@
+# Requirements minimaux pour l'API FastAPI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Base de données
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+alembic==1.13.0
+
+# Cache et sessions
+redis==5.0.1
+aioredis==2.0.1
+
+# Utilitaires
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Monitoring léger
+structlog==23.2.0
+uvicorn[standard]==0.24.0

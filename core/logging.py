@@ -13,11 +13,13 @@ from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from core.config import settings
+from core.config import get_app_settings
 
 
 def configure_logging() -> None:
     """Configure structured logging with OpenTelemetry integration."""
+    
+    settings = get_app_settings()
     
     # Configure structlog
     structlog.configure(

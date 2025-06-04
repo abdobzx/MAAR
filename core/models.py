@@ -44,6 +44,33 @@ class SearchType(str, Enum):
     HYBRID = "hybrid"
 
 
+# Orchestration enums
+class ProcessingStatus(str, Enum):
+    """Processing status for orchestration."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class TaskPriority(str, Enum):
+    """Task priority levels."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class WorkflowType(str, Enum):
+    """Workflow types for orchestration."""
+    SIMPLE_QA = "simple_qa"
+    MULTI_DOC_ANALYSIS = "multi_doc_analysis"
+    FACT_CHECKING = "fact_checking"
+    SUMMARIZATION = "summarization"
+    RESEARCH = "research"
+    CUSTOM = "custom"
+
+
 # Base models
 class TimestampedModel(BaseModel):
     """Base model with timestamps."""
@@ -88,6 +115,7 @@ class Document(UUIDModel, TimestampedModel):
     file_path: str
     document_type: DocumentType
     status: DocumentStatus = DocumentStatus.PENDING
+    content_type: Optional[str] = None
     metadata: DocumentMetadata = Field(default_factory=DocumentMetadata)
     content: Optional[str] = None
     chunks: List[DocumentChunk] = Field(default_factory=list)
@@ -128,6 +156,7 @@ class SearchQuery(BaseModel):
     threshold: float = Field(default=0.7, ge=0.0, le=1.0)
     rerank: bool = True
     user_id: Optional[UUID] = None
+    organization_id: Optional[UUID] = None
 
 
 class SearchResult(BaseModel):
@@ -152,7 +181,7 @@ class SearchResponse(BaseModel):
 # Query models
 class ChatMessage(BaseModel):
     """Chat message model."""
-    role: str = Field(..., regex="^(user|assistant|system)$")
+    role: str = Field(..., pattern="^(user|assistant|system)$")
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
@@ -205,6 +234,65 @@ class Organization(UUIDModel, TimestampedModel):
     is_active: bool = True
 
 
+# Orchestration models
+class WorkflowStep(BaseModel):
+    """Workflow step model."""
+    id: str
+    name: str
+    agent_type: str
+    input_data: Dict[str, Any] = Field(default_factory=dict)
+    output_data: Optional[Dict[str, Any]] = None
+    status: ProcessingStatus = ProcessingStatus.PENDING
+    execution_time: Optional[float] = None
+    error_message: Optional[str] = None
+
+
+class OrchestrationRequest(BaseModel):
+    """Request model for orchestration agent."""
+    query: str = Field(..., min_length=1, max_length=10000)
+    workflow_type: WorkflowType = WorkflowType.SIMPLE_QA
+    context: Optional[Dict[str, Any]] = None
+    user_id: Optional[str] = None
+    organization_id: Optional[str] = None
+    session_id: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
+    custom_steps: Optional[List[WorkflowStep]] = None
+
+
+class OrchestrationResponse(BaseModel):
+    """Response model for orchestration agent."""
+    workflow_id: str
+    status: ProcessingStatus
+    result: Optional[str] = None
+    confidence_score: Optional[float] = None
+    citations: Optional[List[Dict[str, Any]]] = None
+    execution_time: Optional[float] = None
+    steps_completed: Optional[List[str]] = None
+    error_message: Optional[str] = None
+    token_usage: Optional[Dict[str, Any]] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Compatibility fields
+    response: Optional[str] = None
+    sources: List[SearchResult] = Field(default_factory=list)
+    session_id: Optional[str] = None
+    processing_time: Optional[float] = None
+    agent_execution_summary: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class WorkflowStep(BaseModel):
+    """Workflow step model."""
+    id: str
+    name: str
+    agent_type: str
+    input_data: Dict[str, Any] = Field(default_factory=dict)
+    output_data: Optional[Dict[str, Any]] = None
+    status: ProcessingStatus = ProcessingStatus.PENDING
+    execution_time: Optional[float] = None
+    error_message: Optional[str] = None
+
+
 # Feedback models
 class FeedbackType(str, Enum):
     """Feedback type."""
@@ -221,6 +309,19 @@ class Feedback(UUIDModel, TimestampedModel):
     rating: Optional[int] = Field(None, ge=1, le=5)
     comment: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class FeedbackEntry(BaseModel):
+    """Feedback entry model."""
+    session_id: str
+    query_id: Optional[str] = None
+    rating: int = Field(..., ge=1, le=5)
+    feedback_text: Optional[str] = None
+    feedback_type: str = Field(default="general")
+    user_id: Optional[str] = None
+    organization_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 # Configuration models
@@ -262,7 +363,7 @@ class HealthCheck(BaseModel):
     status: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     version: str
-    components: Dict[str, str] = Field(default_factory=dict)
+    components: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ErrorResponse(BaseModel):
@@ -280,6 +381,15 @@ class SuccessResponse(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
+class APIResponse(BaseModel):
+    """Generic API response wrapper."""
+    success: bool
+    message: str
+    data: Optional[Any] = None
+    errors: Optional[List[str]] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
 # File upload models
 class FileUploadResponse(BaseModel):
     """File upload response."""
@@ -287,6 +397,9 @@ class FileUploadResponse(BaseModel):
     filename: str
     status: DocumentStatus
     message: str
+    processing_status: Optional[str] = None
+    title: Optional[str] = None
+    content_type: Optional[str] = None
 
 
 # Analytics models
