@@ -2,143 +2,143 @@
 # Version optimisée et testée pour conteneurisation
 
 # Core Framework
-fastapi
-uvicorn[standard]
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
 pydantic>=2.9.0,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
 
 # Multi-Agent Framework (SothemaAI focused)
- crewai
- langchain
- langchain-community
-langgraph
+ crewai>=0.11.2
+ langchain==0.3.24
+ langchain-community==0.3.24
+langgraph>=0.0.55
 
 # Vector Database & Search
 qdrant-client>=1.7.1,<1.15.0
 weaviate-client>=3.25.0,<4.0.0
 elasticsearch>=8.11.0,<9.0.0
-rank-bm25
+rank-bm25>=0.2.2
 
 # Embeddings & LLMs (SothemaAI focused)
-sentence-transformers
-transformers
+sentence-transformers>=2.2.2
+transformers>=4.36.0
 torch>=2.1.0,<3.0.0
-ollama
+ollama==0.5.1
 
 # Document Processing
-pypdf2
-python-docx
-python-multipart
-pytesseract
-pillow
+pypdf2>=3.0.0
+python-docx>=1.1.0
+python-multipart>=0.0.6
+pytesseract>=0.3.10
+pillow>=10.1.0
 aiohttp>=3.9.0,<4.0.0
-langdetect
+langdetect>=1.0.9
 
 # Database & Storage
-sqlalchemy
-asyncpg
-redis
-minio
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+redis>=5.0.1
+minio>=7.2.0
 
 # Security & Authentication
-python-jose[cryptography]
-passlib[bcrypt]
-python-keycloak
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-keycloak>=3.8.0
 cryptography>=41.0.0
 
 # Monitoring & Observability
-prometheus-client
-opentelemetry-api
-opentelemetry-sdk
+prometheus-client>=0.19.0
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
 langsmith>=0.1.17,<0.4.0
 
 # HTTP Client - Compatible avec ollama (CRITIQUE)
 httpx>=0.27.0,<0.29.0
 
 # Utilities
-aiofiles
-python-dotenv
-celery
-structlog
-typer
+aiofiles>=23.2.1
+python-dotenv>=1.0.0
+celery>=5.3.4
+structlog>=23.2.0
+typer>=0.9.0
 
 # Development & Testing (optionnel en production)
-pytest
-pytest-asyncio
-pytest-cov
+pytest>=7.4.3
+pytest-asyncio>=0.23.2
+pytest-cov>=4.1.0
 
 # Vector Database & Search
 qdrant-client>=1.7.0
 weaviate-client>=3.25.0
 elasticsearch>=8.11.0
-rank-bm25
+rank-bm25>=0.2.2
 
 # Embeddings & LLMs (SothemaAI focused - OpenAI removed)
-sentence-transformers
-transformers
+sentence-transformers>=2.2.0
+transformers>=4.36.0
 torch>=2.1.0
-ollama
+ollama==0.5.1
 
 # Document Processing
-pypdf2
-python-docx
-python-multipart
-pytesseract
-pillow
-openai-whisper
+pypdf2>=3.0.0
+python-docx>=1.1.0
+python-multipart>=0.0.6
+pytesseract>=0.3.10
+pillow>=10.1.0
+openai-whisper>=20231117
 
 # Database & Storage
-sqlalchemy
-asyncpg
-redis
-minio
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+redis>=5.0.0
+minio>=7.2.0
 
 # AI Providers (SothemaAI focused)
-cohere
-aiohttp
+cohere>=4.39.0
+aiohttp>=3.9.0
 
 # Security & Authentication
-python-jose[cryptography]
-passlib[bcrypt]
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.0
 cryptography>=41.0.0
 
 # Monitoring & Observability
-prometheus-client
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-instrumentation-fastapi
-opentelemetry-exporter-jaeger
+prometheus-client>=0.19.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-instrumentation-fastapi>=0.42b0
+opentelemetry-exporter-jaeger>=1.21.0
 langsmith>=0.1.17,<0.4.0
 
 # HTTP Client - Compatible with ollama
 httpx>=0.27.0,<0.29.0
-requests
+requests>=2.31.0
 
 # Utilities
-aiofiles
-python-dotenv
-celery
-structlog
-typer
-email-validator
+aiofiles>=23.2.0
+python-dotenv>=1.0.0
+celery>=5.3.0
+structlog>=23.2.0
+typer>=0.9.0
+email-validator>=2.1.0
 
 # Development & Testing
-pytest
-pytest-asyncio
-pytest-cov
-black
-isort
-mypy
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.12.0
+isort>=5.13.0
+mypy>=1.8.0
 
 # Data Processing
-numpy
-pandas
+numpy>=1.24.0
+pandas>=2.1.0
 
 # Configuration
-pyyaml
+pyyaml>=6.0.1
 
 # Cloud & Deployment
-kubernetes
-azure-identity
-azure-storage-blob
-boto3
+kubernetes==28.1.0
+azure-identity==1.15.0
+azure-storage-blob==12.19.0
+boto3==1.34.0
