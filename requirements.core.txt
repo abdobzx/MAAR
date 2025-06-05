@@ -1,0 +1,18 @@
+# Requirements minimaux pour résoudre "resolution-too-deep"
+# Installation en deux phases pour éviter les conflits
+
+# Phase 1: Core dependencies
+fastapi>=0.108.0
+uvicorn[standard]>=0.25.0
+pydantic>=2.9.0,<3.0.0
+
+# Phase 2: AI Core (installé séparément)
+# langchain>=0.3.25
+# langchain-community>=0.3.23
+# crewai>=0.11.2
+
+# Phase 3: Utilities essentiels
+aiohttp>=3.9.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1

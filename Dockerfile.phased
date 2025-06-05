@@ -1,0 +1,47 @@
+# Dockerfile optimisé pour résoudre "resolution-too-deep"
+FROM python:3.11-slim
+
+# Variables d'environnement pour optimiser pip
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc6-dev \
+    tesseract-ocr \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Mise à jour de pip et outils de base
+RUN pip install --upgrade pip setuptools wheel
+
+# PHASE 1: Installation des dépendances core en premier
+COPY requirements.core.txt /tmp/requirements.core.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.core.txt
+
+# PHASE 2: Installation des packages AI séparément
+COPY requirements.ai.txt /tmp/requirements.ai.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.ai.txt
+
+# PHASE 3: Installation du reste des dépendances
+COPY requirements.staging.txt /tmp/requirements.staging.txt
+RUN pip install --no-cache-dir \
+    --constraint /tmp/requirements.core.txt \
+    --constraint /tmp/requirements.ai.txt \
+    -r /tmp/requirements.staging.txt
+
+# Copier le code de l'application
+COPY . .
+
+# Port d'écoute
+EXPOSE 8000
+
+# Commande par défaut
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
