@@ -7,28 +7,18 @@ import sys
 from typing import Any, Dict, Optional
 
 import structlog
-from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-from core.config import get_app_settings
-
 
 def configure_logging() -> None:
-    """Configure structured logging with OpenTelemetry integration."""
+    """Configure structured logging."""
     
-    settings = get_app_settings()
-    
-    # Configure structlog
+    # Configure structlog with basic setup
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
             structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.add_log_level,
             structlog.processors.StackInfoRenderer(),
-            structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
+            structlog.dev.ConsoleRenderer(),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, settings.monitoring.log_level)

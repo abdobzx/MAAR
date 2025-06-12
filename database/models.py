@@ -89,7 +89,7 @@ class Document(Base, UUIDMixin, TimestampMixin):
     document_type = Column(Enum(DocumentType), nullable=False)
     status = Column(Enum(DocumentStatus), default=DocumentStatus.PENDING)
     content = Column(Text)
-    metadata = Column(JSON, default=dict)
+    doc_metadata = Column(JSON, default=dict)
     processing_error = Column(Text)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"))
