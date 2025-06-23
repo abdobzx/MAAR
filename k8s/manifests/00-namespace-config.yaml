@@ -1,0 +1,73 @@
+# Namespace pour la plateforme MAR
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mar-platform
+  labels:
+    name: mar-platform
+    environment: production
+---
+# ConfigMap pour la configuration globale
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mar-config
+  namespace: mar-platform
+data:
+  # Configuration API
+  API_ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  VECTOR_STORE_TYPE: "faiss"
+  
+  # Configuration Ollama
+  OLLAMA_HOST: "ollama-service"
+  OLLAMA_PORT: "11434"
+  
+  # Configuration Redis
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # Configuration monitoring
+  PROMETHEUS_ENABLED: "true"
+  METRICS_PORT: "8000"
+---
+# Secret pour les clés sensibles
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mar-secrets
+  namespace: mar-platform
+type: Opaque
+data:
+  # JWT secret (base64 encoded)
+  JWT_SECRET: "bWFyLXNlY3JldC1rZXktMjAyNA=="
+  # API Keys (à modifier en production)
+  MAR_API_KEY: "bWFyLWFwaS1rZXktc3VwZXItc2VjcmV0"
+---
+# PersistentVolumeClaim pour le vector store
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vector-store-pvc
+  namespace: mar-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd  # Adapter selon votre cluster
+---
+# PersistentVolumeClaim pour Ollama models
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models-pvc
+  namespace: mar-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd

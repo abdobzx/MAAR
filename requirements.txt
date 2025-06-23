@@ -1,0 +1,68 @@
+# === Core API ===
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# === Multi-Agent Framework ===
+crewai>=0.1.0
+langchain>=0.1.0
+langchain-community>=0.0.20
+
+# === LLM Integration ===
+ollama>=0.1.0
+requests>=2.31.0
+
+# === Vector Stores ===
+# FAISS (CPU version - change to faiss-gpu if GPU available)
+faiss-cpu>=1.7.4
+# ChromaDB alternative
+chromadb>=0.4.0
+
+# === Data Processing ===
+numpy>=1.24.0
+pandas>=2.0.0
+pydantic>=2.0.0
+
+# === Document Processing ===
+PyMuPDF>=1.23.0  # PDF processing
+python-docx>=0.8.11  # DOCX processing
+chardet>=5.2.0  # Encoding detection
+sentence-transformers>=2.2.0  # Embeddings
+
+# === Database & Caching ===
+redis>=5.0.0
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0  # PostgreSQL async driver (optional)
+
+# === Monitoring & Observability ===
+prometheus-client>=0.19.0
+structlog>=23.2.0
+elastic-apm>=6.20.0  # APM integration (optional)
+
+# === Security ===
+bcrypt>=4.1.0
+cryptography>=41.0.0
+
+# === HTTP & Networking ===
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# === Development & Testing ===
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.0.0
+flake8>=6.1.0
+mypy>=1.7.0
+
+# === Utilities ===
+python-dotenv>=1.0.0
+click>=8.1.0  # CLI utilities
+rich>=13.7.0  # Beautiful terminal output
+typer>=0.9.0  # CLI framework
+
+# === Optional: GPU Support ===
+# torch>=2.1.0  # Uncomment for GPU embeddings
+# transformers>=4.35.0  # Uncomment for local models

@@ -1,0 +1,224 @@
+# Ingress pour exposer les services
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mar-platform-ingress
+  namespace: mar-platform
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit-rps: "10"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "5"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - mar.votre-domaine.com
+    - api.mar.votre-domaine.com
+    - monitoring.mar.votre-domaine.com
+    secretName: mar-platform-tls
+  rules:
+  # Interface utilisateur principale
+  - host: mar.votre-domaine.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mar-ui-service
+            port:
+              number: 80
+  
+  # API MAR
+  - host: api.mar.votre-domaine.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mar-api-service
+            port:
+              number: 80
+  
+  # Monitoring (Grafana)
+  - host: monitoring.mar.votre-domaine.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 3000
+      # Prometheus (sous-chemin pour sécurité)
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+---
+# NetworkPolicy pour sécuriser les communications
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mar-platform-netpol
+  namespace: mar-platform
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Règles d'entrée
+  ingress:
+  # Autoriser l'accès depuis l'ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8501
+    - protocol: TCP
+      port: 3000
+    - protocol: TCP
+      port: 9090
+  
+  # Communication interne entre services
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8501
+    - protocol: TCP
+      port: 11434
+    - protocol: TCP
+      port: 6379
+    - protocol: TCP
+      port: 9090
+    - protocol: TCP
+      port: 3000
+  
+  # Règles de sortie
+  egress:
+  # DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  
+  # Communication interne
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8501
+    - protocol: TCP
+      port: 11434
+    - protocol: TCP
+      port: 6379
+    - protocol: TCP
+      port: 9090
+    - protocol: TCP
+      port: 3000
+  
+  # HTTPS pour téléchargements de modèles
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+# PodDisruptionBudget pour l'API
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mar-api-pdb
+  namespace: mar-platform
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: mar-api
+---
+# PodDisruptionBudget pour l'UI
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mar-ui-pdb
+  namespace: mar-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: mar-ui
+---
+# ServiceMonitor pour Prometheus (si operator installé)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mar-api-servicemonitor
+  namespace: mar-platform
+  labels:
+    app: mar-api
+spec:
+  selector:
+    matchLabels:
+      app: mar-api
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+---
+# Déploiement d'un init container pour la base de données vectorielle
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vector-store-init
+  namespace: mar-platform
+spec:
+  template:
+    spec:
+      containers:
+      - name: init-vector-store
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Initialisation du répertoire vector store..."
+          mkdir -p /app/data/vector_store
+          chmod 755 /app/data/vector_store
+          echo "Répertoire vector store initialisé"
+        volumeMounts:
+        - name: vector-store-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: vector-store-data
+        persistentVolumeClaim:
+          claimName: vector-store-pvc
+      restartPolicy: OnFailure
+  backoffLimit: 3

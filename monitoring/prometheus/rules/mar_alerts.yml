@@ -1,0 +1,115 @@
+# Règles d'alerting pour la plateforme MAR
+groups:
+  - name: mar_platform_alerts
+    rules:
+      # Alert si l'API MAR est down
+      - alert: MARAPIDown
+        expr: up{job="mar-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'API MAR est inaccessible"
+          description: "L'API MAR n'a pas répondu pendant plus de 30 secondes"
+
+      # Alert sur le temps de réponse élevé
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="mar-api"}[5m])) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Temps de réponse élevé de l'API MAR"
+          description: "Le 95e percentile du temps de réponse est de {{ $value }}s"
+
+      # Alert sur le taux d'erreur élevé
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="mar-api",status=~"5.."}[5m]) / rate(http_requests_total{job="mar-api"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreur élevé"
+          description: "Le taux d'erreur 5xx est de {{ $value | humanizePercentage }}"
+
+      # Alert sur l'utilisation mémoire
+      - alert: HighMemoryUsage
+        expr: (process_resident_memory_bytes{job="mar-api"} / 1024 / 1024 / 1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Utilisation mémoire élevée"
+          description: "L'API MAR utilise {{ $value }}GB de mémoire"
+
+      # Alert si Ollama est down
+      - alert: OllamaDown
+        expr: up{job="ollama"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service Ollama inaccessible"
+          description: "Le service Ollama LLM n'est pas accessible"
+
+      # Alert sur la latence des agents
+      - alert: AgentHighLatency
+        expr: histogram_quantile(0.95, rate(agent_execution_duration_seconds_bucket[5m])) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence élevée des agents"
+          description: "Les agents prennent plus de 10s pour répondre (95e percentile)"
+
+      # Alert sur le vector store
+      - alert: VectorStoreError
+        expr: increase(vector_store_errors_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Erreurs dans le vector store"
+          description: "{{ $value }} erreurs détectées dans le vector store en 5 minutes"
+
+  - name: infrastructure_alerts
+    rules:
+      # Alert sur l'espace disque
+      - alert: DiskSpaceHigh
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Espace disque faible"
+          description: "Il reste moins de 10% d'espace disque libre"
+
+      # Alert sur la charge CPU
+      - alert: HighCPULoad
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Charge CPU élevée"
+          description: "La charge CPU moyenne est de {{ $value }}%"
+
+      # Alert sur Redis
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis inaccessible"
+          description: "Le service Redis n'est pas accessible"
+
+      # Alert sur Elasticsearch
+      - alert: ElasticsearchDown
+        expr: up{job="elasticsearch"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elasticsearch inaccessible"
+          description: "Le service Elasticsearch n'est pas accessible"

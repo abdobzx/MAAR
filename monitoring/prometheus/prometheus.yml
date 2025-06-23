@@ -1,0 +1,63 @@
+# Configuration Prometheus pour la plateforme MAR
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Configuration des règles d'alerting
+rule_files:
+  - "rules/*.yml"
+
+# Configuration des alertmanagers
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Configuration des targets à scraper
+scrape_configs:
+  # Job pour l'API MAR
+  - job_name: 'mar-api'
+    static_configs:
+      - targets: ['mar-api:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Job pour Prometheus lui-même
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Job pour le service Ollama
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['ollama:11434']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Job pour Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Job pour l'interface Streamlit
+  - job_name: 'streamlit'
+    static_configs:
+      - targets: ['mar-ui:8501']
+    metrics_path: '/_stcore/metrics'
+    scrape_interval: 30s
+
+  # Job pour Elasticsearch
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 30s
+
+# Configuration de stockage
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
