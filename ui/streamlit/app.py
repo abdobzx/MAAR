@@ -574,19 +574,23 @@ Les agents ont collaboré pour vous fournir une réponse complète et vérifiée
         # Liens vers Grafana/Prometheus
         st.subheader("🔗 Outils Externes")
         
+        GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3001")
+        PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+        KIBANA_URL = os.getenv("KIBANA_URL", "http://localhost:5602")
+
         col1, col2, col3 = st.columns(3)
         
         with col1:
             if st.button("📊 Ouvrir Grafana", use_container_width=True):
-                st.markdown("[Grafana Dashboard](http://localhost:3000)", unsafe_allow_html=True)
+                st.markdown(f"[Grafana Dashboard]({GRAFANA_URL})", unsafe_allow_html=True)
         
         with col2:
             if st.button("🎯 Ouvrir Prometheus", use_container_width=True):
-                st.markdown("[Prometheus Metrics](http://localhost:9090)", unsafe_allow_html=True)
+                st.markdown(f"[Prometheus Metrics]({PROMETHEUS_URL})", unsafe_allow_html=True)
         
         with col3:
             if st.button("🔍 Ouvrir Kibana", use_container_width=True):
-                st.markdown("[Kibana Logs](http://localhost:5601)", unsafe_allow_html=True)
+                st.markdown(f"[Kibana Logs]({KIBANA_URL})", unsafe_allow_html=True)
 
 
 def main():
