@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 # Pipeline CI/CD pour la plateforme MAR
 name: MAR Platform CI/CD
 
 on:
   push:
     branches: [ main, develop ]
+=======
+name: Enterprise RAG CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, Dev]
+>>>>>>> origin/main
   pull_request:
     branches: [ main ]
   release:
@@ -11,6 +19,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+<<<<<<< HEAD
   IMAGE_NAME_API: ${{ github.repository }}/mar-api
   IMAGE_NAME_UI: ${{ github.repository }}/mar-ui
 
@@ -181,11 +190,36 @@ jobs:
         image: redis:7-alpine
         ports:
           - 6379:6379
+=======
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+>>>>>>> origin/main
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+<<<<<<< HEAD
     
     steps:
     - name: Checkout code
@@ -327,3 +361,219 @@ jobs:
       run: |
         echo "❌ Échec du pipeline MAR Platform"
         # Ici vous pouvez ajouter des notifications d'échec
+=======
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov black isort mypy
+
+    - name: Lint with black
+      run: black --check .
+
+    - name: Sort imports with isort
+      run: isort --check-only .
+
+    - name: Type check with mypy
+      run: mypy . --ignore-missing-imports
+
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key
+        ENVIRONMENT: testing
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Bandit security linter
+      run: |
+        pip install bandit
+        bandit -r . -f json -o bandit-report.json || true
+
+  build:
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+    - name: Deploy to staging
+      run: |
+        # Update image tag in deployment
+        IMAGE_TAG=${GITHUB_SHA::7}
+        sed -i "s|enterprise-rag:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${IMAGE_TAG}|g" infrastructure/kubernetes/app.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f infrastructure/kubernetes/namespace.yaml
+        kubectl apply -f infrastructure/kubernetes/configmap.yaml
+        kubectl apply -f infrastructure/kubernetes/postgres.yaml
+        kubectl apply -f infrastructure/kubernetes/redis.yaml
+        kubectl apply -f infrastructure/kubernetes/vector-db.yaml
+        kubectl apply -f infrastructure/kubernetes/app.yaml
+        kubectl apply -f infrastructure/kubernetes/autoscaling.yaml
+        
+        # Wait for deployment
+        kubectl rollout status deployment/rag-api -n enterprise-rag --timeout=600s
+
+    - name: Run integration tests
+      run: |
+        # Wait for services to be ready
+        kubectl wait --for=condition=ready pod -l app=rag-api -n enterprise-rag --timeout=300s
+        
+        # Run integration tests against staging
+        API_URL="https://staging-api.enterprise-rag.com"
+        pytest tests/integration/ --api-url=$API_URL
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+
+    - name: Deploy to production
+      run: |
+        # Update image tag to release version
+        RELEASE_TAG=${GITHUB_REF#refs/tags/}
+        sed -i "s|enterprise-rag:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${RELEASE_TAG}|g" infrastructure/kubernetes/app.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f infrastructure/kubernetes/namespace.yaml
+        kubectl apply -f infrastructure/kubernetes/configmap.yaml
+        kubectl apply -f infrastructure/kubernetes/postgres.yaml
+        kubectl apply -f infrastructure/kubernetes/redis.yaml
+        kubectl apply -f infrastructure/kubernetes/vector-db.yaml
+        kubectl apply -f infrastructure/kubernetes/app.yaml
+        kubectl apply -f infrastructure/kubernetes/autoscaling.yaml
+        kubectl apply -f infrastructure/kubernetes/ingress.yaml
+        
+        # Rolling update strategy
+        kubectl rollout status deployment/rag-api -n enterprise-rag --timeout=600s
+
+    - name: Verify deployment
+      run: |
+        # Health check
+        kubectl wait --for=condition=ready pod -l app=rag-api -n enterprise-rag --timeout=300s
+        
+        # Smoke tests
+        API_URL="https://api.enterprise-rag.com"
+        curl -f $API_URL/health || exit 1
+
+    - name: Notify Slack
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+>>>>>>> origin/main

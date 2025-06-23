@@ -1,0 +1,50 @@
+# Dockerfile avec installation progressive pour éviter "resolution-too-deep"
+FROM python:3.11-slim
+
+# Variables d'environnement optimisées
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PIP_RETRIES=3 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    gcc g++ libc6-dev \
+    tesseract-ocr \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Mise à jour des outils de base
+RUN pip install --upgrade pip setuptools wheel
+
+# Copier le fichier requirements
+COPY requirements.staging.txt /tmp/requirements.txt
+
+# Installation avec stratégie de résolution simplifiée
+RUN pip install --no-cache-dir \
+    --only-binary=all \
+    --find-links https://download.pytorch.org/whl/cpu/torch_stable.html \
+    -r /tmp/requirements.txt || \
+    # Si échec, essayer installation sans contraintes strictes
+    pip install --no-cache-dir \
+    --no-deps \
+    fastapi uvicorn pydantic aiohttp requests python-dotenv && \
+    pip install --no-cache-dir \
+    langchain langchain-community crewai && \
+    pip install --no-cache-dir \
+    transformers sentence-transformers && \
+    pip install --no-cache-dir \
+    -r /tmp/requirements.txt --force-reinstall
+
+# Copier le code de l'application
+COPY . .
+
+# Port d'écoute
+EXPOSE 8000
+
+# Commande par défaut
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

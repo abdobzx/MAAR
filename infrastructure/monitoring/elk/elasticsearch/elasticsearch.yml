@@ -1,0 +1,37 @@
+cluster.name: "rag-cluster"
+network.host: 0.0.0.0
+http.port: 9200
+discovery.type: "single-node"
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Security settings
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+
+# Monitoring
+xpack.monitoring.collection.enabled: true
+
+# Index settings
+action.auto_create_index: "+*"
+
+# Logging
+logger.level: INFO
+
+# Path settings
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# Index lifecycle management
+xpack.ilm.enabled: true
+
+# Template for RAG logs
+index.number_of_shards: 1
+index.number_of_replicas: 0
+
+# Performance tuning
+thread_pool.write.queue_size: 10000
+indices.memory.index_buffer_size: 20%
+indices.queries.cache.size: 10%
+indices.fielddata.cache.size: 15%

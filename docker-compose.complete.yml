@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: rag_postgres_staging
+    environment:
+      POSTGRES_DB: rag_database_staging
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Port différent pour éviter les conflits
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag_user -d rag_database_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag_network
+
+  # Redis pour le cache
+  redis:
+    image: redis:7-alpine
+    container_name: rag_redis_staging
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis_data_staging:/data
+    ports:
+      - "6380:6379"  # Port différent pour éviter les conflits
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag_network
+
+  # Qdrant pour les vecteurs
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag_qdrant_staging
+    volumes:
+      - qdrant_data_staging:/qdrant/storage
+    ports:
+      - "6334:6333"  # Port différent pour éviter les conflits
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag_network
+
+  # Application principale RAG optimisée pour staging
+  rag_api:
+    build: 
+      context: .
+      dockerfile: Dockerfile.staging
+      target: production
+    container_name: rag_api_staging
+    environment:
+      - ENVIRONMENT=staging
+      - DEBUG=false
+      - AUTO_MIGRATE=true
+      - WORKERS=2
+      # Database
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      # Redis
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+      # Vector DB
+      - QDRANT_URL=http://qdrant:6333
+      # Security
+      - SECURITY_SECRET_KEY=staging-secret-key-change-in-production
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+        reservations:
+          memory: 1G
+          cpus: "0.5"
+
+  # Celery Workers optimisés
+  celery_worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile.staging
+      target: production
+    container_name: rag_celery_staging
+    command: celery -A core.celery worker --loglevel=info --concurrency=2
+    environment:
+      - ENVIRONMENT=staging
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+
+  # Celery Beat pour les tâches planifiées
+  celery_beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile.staging
+      target: production
+    container_name: rag_beat_staging
+    command: celery -A core.celery beat --loglevel=info
+    environment:
+      - ENVIRONMENT=staging
+      - DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_database_staging
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rag_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  rag_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  postgres_data_staging:
+    driver: local
+  redis_data_staging:
+    driver: local
+  qdrant_data_staging:
+    driver: local

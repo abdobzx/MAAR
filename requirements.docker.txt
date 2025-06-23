@@ -1,0 +1,74 @@
+# Requirements finaux pour Docker avec Python 3.11
+# Version optimisée et testée pour conteneurisation
+
+# Core Framework
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
+
+# Multi-Agent Framework (SothemaAI focused)
+crewai>=0.11.2
+langchain>=0.2.0
+langchain-community>=0.2.0
+langgraph>=0.0.55
+
+# Vector Database & Search
+qdrant-client>=1.7.1,<1.15.0
+weaviate-client>=3.25.0,<4.0.0
+elasticsearch>=8.11.0,<9.0.0
+rank-bm25>=0.2.2
+
+# Embeddings & LLMs (SothemaAI focused)
+sentence-transformers>=2.2.2
+transformers>=4.36.0
+torch>=2.1.0,<3.0.0
+ollama==0.5.1
+
+# Document Processing
+pypdf2>=3.0.0
+python-docx>=1.1.0
+python-multipart>=0.0.6
+pytesseract>=0.3.10
+pillow>=10.1.0
+aiohttp>=3.9.0,<4.0.0
+langdetect>=1.0.9
+
+# Database & Storage
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+redis>=5.0.1
+minio>=7.2.0
+
+# Security & Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-keycloak>=3.8.0
+cryptography>=41.0.0
+
+# Monitoring & Observability
+prometheus-client>=0.19.0
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
+langsmith>=0.0.69
+
+# HTTP Client - Compatible avec ollama (CRITIQUE)
+httpx>=0.27.0,<0.29.0
+
+# Utilities
+aiofiles>=23.2.1
+python-dotenv>=1.0.0
+celery>=5.3.4
+structlog>=23.2.0
+typer>=0.9.0
+
+# Development & Testing (optionnel en production)
+pytest>=7.4.3
+pytest-asyncio>=0.23.2
+pytest-cov>=4.1.0
+
+# Cloud & Deployment
+kubernetes>=28.1.0
+azure-identity>=1.15.0
+azure-storage-blob>=12.19.0
+boto3>=1.34.0

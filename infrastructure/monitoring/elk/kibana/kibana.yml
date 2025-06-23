@@ -1,0 +1,44 @@
+server.name: kibana
+server.host: 0.0.0.0
+server.port: 5601
+
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.pingTimeout: 1500
+elasticsearch.requestTimeout: 30000
+
+# Logging
+logging.appenders:
+  file:
+    type: file
+    fileName: /usr/share/kibana/logs/kibana.log
+    layout:
+      type: json
+logging.root:
+  level: info
+
+# Monitoring
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Security
+xpack.security.enabled: false
+
+# Saved objects
+savedObjects.maxImportPayloadBytes: 26214400
+
+# Advanced settings
+kibana.index: ".kibana"
+kibana.defaultAppId: "discover"
+
+# UI settings
+map.includeElasticMapsService: false
+
+# Telemetry
+telemetry.enabled: false
+telemetry.optIn: false
+
+# Performance
+server.maxPayloadBytes: 1048576
+
+# Timeouts
+elasticsearch.shardTimeout: 30000
+elasticsearch.requestHeadersWhitelist: ["authorization"]
