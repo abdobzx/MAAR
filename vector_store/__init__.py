@@ -8,6 +8,7 @@ from .chroma_store import ChromaVectorStore
 from .base import BaseVectorStore
 from .ingestion import DocumentIngestion
 from .models import Document, QueryResult
+from .factory import create_vector_store
 
 __all__ = [
     "BaseVectorStore",
@@ -15,5 +16,6 @@ __all__ = [
     "ChromaVectorStore",
     "DocumentIngestion",
     "Document",
-    "QueryResult"
+    "QueryResult",
+    "create_vector_store"
 ]
