@@ -406,13 +406,6 @@ def require_permissions(required_permissions: list):
         return current_user
     
     return permission_checker
-        if permission not in api_user.get("permissions", []):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permission '{permission}' requise pour cette clé API"
-            )
-        
-        return api_user
     
     return api_permission_checker
 

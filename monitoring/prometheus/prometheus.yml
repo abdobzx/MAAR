@@ -56,8 +56,8 @@ scrape_configs:
     metrics_path: '/_prometheus/metrics'
     scrape_interval: 30s
 
-# Configuration de stockage
-storage:
-  tsdb:
-    retention.time: 30d
-    retention.size: 10GB
+# Configuration de stockage (mise en commentaire car invalide dans cette version)
+# storage:
+#   tsdb:
+#     retention.time: 30d
+#     retention.size: 10GB
