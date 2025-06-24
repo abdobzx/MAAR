@@ -406,6 +406,31 @@ def require_permissions(required_permissions: list):
         return current_user
     
     return permission_checker
+
+
+def require_api_key_permission(required_permission: str):
+    """
+    Dependency factory pour vérifier les permissions des clés API
+    
+    Args:
+        required_permission: Permission requise pour la clé API
+        
+    Returns:
+        Dependency function
+    """
+    async def api_permission_checker(
+        api_key: Dict[str, Any] = Depends(get_api_key_user)
+    ):
+        # Vérifier si la clé API a la permission requise
+        api_key_permissions = set(api_key.get("permissions", []))
+        
+        if required_permission not in api_key_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission API requise: {required_permission}"
+            )
+        
+        return api_key
     
     return api_permission_checker
 
