@@ -19,7 +19,7 @@ echo "✓ Sauvegarde créée: requirements.txt.backup.$(date +%s)"
 
 # Ajouter les dépendances si elles n'existent pas déjà
 for dep in "${DEPENDENCIES[@]}"; do
-  package=$(echo $dep | cut -d'>=' -f1)
+  package=$(echo $dep | cut -d= -f1 | cut -d'>' -f1)
   if ! grep -q "$package" requirements.txt; then
     echo "$dep" >> requirements.txt
     echo "✓ Dépendance '$dep' ajoutée au fichier requirements.txt"
