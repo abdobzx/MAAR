@@ -201,12 +201,14 @@ def create_app() -> FastAPI:
     return app
 
 
+# Création de l'application FastAPI pour une utilisation directe par Uvicorn
+app = create_app()
+
+
 if __name__ == "__main__":
     # Configuration pour le développement
-    app = create_app()
-    
     uvicorn.run(
-        app,
+        "api.main:app",
         host=os.getenv("API_HOST", "0.0.0.0"),
         port=int(os.getenv("API_PORT", 8000)),
         reload=os.getenv("ENVIRONMENT") == "development",
