@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 import uuid
 
-from ..main import get_platform
+from ..platform import get_platform
 from ..auth.dependencies import get_current_user
 from ..models.chat import (
     ChatRequest, ChatResponse, ChatSession, 
