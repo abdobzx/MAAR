@@ -87,18 +87,17 @@ echo "=================="
 
 # Vérifier si Ollama fonctionne
 if ! docker exec mar-api curl -s http://ollama:11434/api/tags > /dev/null 2>&1; then
-    echo "🔧 Exécuter: ./fix-ollama-connection-definitive.sh"
+    echo "🔧 Problème de connexion Ollama détecté"
 fi
 
 # Vérifier si les modules manquent
 if ! docker exec mar-api python3 -c "import llm.pooling" 2>/dev/null; then
-    echo "🔧 Exécuter: ./fix-missing-module.sh"
+    echo "🔧 Module llm.pooling manquant"
 fi
 
 # Vérifier si l'API ne répond pas
 if ! curl -s http://localhost:8008/health > /dev/null; then
-    echo "🔧 Vérifier: docker logs mar-api"
-    echo "🔧 Redémarrer: docker-compose restart mar-api"
+    echo "🔧 API ne répond pas"
 fi
 
 echo ""

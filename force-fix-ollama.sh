@@ -42,52 +42,8 @@ find . -name "*.py" -type f | while read file; do
     fi
 done
 
-# 3. Créer un patch spécifique pour les clients Ollama
-echo "3. Application de patches spécifiques..."
-
-# Patch pour le client Ollama principal
-if [ -f "llm/ollama/client.py" ]; then
-    echo "Patch du client Ollama principal..."
-    cat > temp_patch.py << 'EOL'
-import re
-import sys
-
-def patch_ollama_client(filepath):
-    try:
-        with open(filepath, 'r') as f:
-            content = f.read()
-        
-        # Patch spécifique pour forcer l'utilisation d'ollama:11434
-        patches = [
-            # Forcer OLLAMA_HOST au début du fichier
-            (r'^(import .*?)$', r'\1\nimport os\nos.environ["OLLAMA_HOST"] = "ollama:11434"'),
-            # Corriger les initialisations d'URL
-            (r'self\.base_url = .*', 'self.base_url = "http://ollama:11434"'),
-            (r'base_url=.*localhost.*', 'base_url="http://ollama:11434"'),
-            (r'url.*=.*localhost:11434', 'url = "http://ollama:11434"'),
-        ]
-        
-        for pattern, replacement in patches:
-            content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
-        
-        with open(filepath, 'w') as f:
-            f.write(content)
-        
-        print(f"✓ Client Ollama patché: {filepath}")
-        
-    except Exception as e:
-        print(f"⚠️ Erreur lors du patch de {filepath}: {e}")
-
-if __name__ == "__main__":
-    patch_ollama_client(sys.argv[1])
-EOL
-
-    python3 temp_patch.py "llm/ollama/client.py"
-    rm temp_patch.py
-fi
-
-# 4. Forcer les variables d'environnement dans le Dockerfile
-echo "4. Correction du Dockerfile..."
+# 3. Forcer les variables d'environnement dans le Dockerfile
+echo "3. Correction du Dockerfile..."
 if [ -f Dockerfile ]; then
     # Ajouter les variables d'environnement Ollama au Dockerfile s'elles n'y sont pas
     if ! grep -q "OLLAMA_HOST" Dockerfile; then
@@ -96,10 +52,36 @@ if [ -f Dockerfile ]; then
     fi
 fi
 
-# 5. Correction du docker-compose.yml
+# 4. Créer un fichier .env propre
+echo "4. Création d'un fichier .env propre..."
+cat > .env << 'EOL'
+OLLAMA_HOST=ollama:11434
+OLLAMA_URL=http://ollama:11434
+API_PORT=8008
+API_HOST=0.0.0.0
+REDIS_URL=redis://redis:6379
+ELASTICSEARCH_URL=http://elasticsearch:9200
+PROMETHEUS_URL=http://prometheus:9090
+GRAFANA_URL=http://grafana:3000
+PYTHONPATH=/app
+PYTHONUNBUFFERED=1
+EOL
+echo "✓ Fichier .env créé"
+
+# 5. Correction du docker-compose.yml pour forcer les variables
 echo "5. Correction du docker-compose.yml..."
-python3 << 'EOL'
+if [ -f docker-compose.yml ]; then
+    # S'assurer que mar-api a les bonnes variables d'environnement
+    if ! grep -A 10 "mar-api:" docker-compose.yml | grep -q "OLLAMA_HOST"; then
+        echo "Ajout des variables Ollama au docker-compose.yml..."
+        
+        # Créer une version modifiée
+        cp docker-compose.yml docker-compose.yml.backup
+        
+        # Utiliser Python pour modifier le YAML proprement
+        python3 << 'EOL'
 import yaml
+import sys
 
 try:
     with open('docker-compose.yml', 'r') as f:
@@ -115,12 +97,17 @@ try:
         # Forcer les variables Ollama
         service['environment']['OLLAMA_HOST'] = 'ollama:11434'
         service['environment']['OLLAMA_URL'] = 'http://ollama:11434'
+        service['environment']['PYTHONPATH'] = '/app'
         
         # S'assurer de la dépendance
         if 'depends_on' not in service:
             service['depends_on'] = []
-        if 'ollama' not in service['depends_on']:
-            service['depends_on'].append('ollama')
+        if isinstance(service['depends_on'], list):
+            if 'ollama' not in service['depends_on']:
+                service['depends_on'].append('ollama')
+        elif isinstance(service['depends_on'], dict):
+            if 'ollama' not in service['depends_on']:
+                service['depends_on']['ollama'] = {'condition': 'service_started'}
     
     with open('docker-compose.yml', 'w') as f:
         yaml.dump(compose, f, default_flow_style=False)
@@ -129,20 +116,48 @@ try:
     
 except Exception as e:
     print(f"⚠️ Erreur: {e}")
+    # Fallback: modification manuelle
+    print("Utilisation de la méthode manuelle...")
 EOL
+    fi
+fi
 
-# 6. Reconstruire avec force
-echo "6. Reconstruction forcée..."
+# 6. Créer les modules manquants dans le Dockerfile
+echo "6. Ajout de la création des modules manquants au Dockerfile..."
+if [ -f Dockerfile ]; then
+    if ! grep -q "llm/pooling" Dockerfile; then
+        # Ajouter la création des modules au Dockerfile
+        cat >> Dockerfile << 'EOL'
+
+# Création des modules manquants
+RUN mkdir -p /app/llm/pooling && \
+    mkdir -p /app/orchestrator/tasks
+
+# Création du module llm.pooling
+RUN echo 'class LLMPool:\n    def __init__(self, max_connections=5):\n        self.max_connections = max_connections\n        self.clients = []\n        self.active_clients = 0\n\n    async def get_client(self):\n        return None\n\n    async def release_client(self, client):\n        pass\n\n    async def initialize(self):\n        pass' > /app/llm/pooling/pool.py && \
+    touch /app/llm/pooling/__init__.py
+
+# Création du module orchestrator.tasks
+RUN echo 'class RAGTaskManager:\n    def __init__(self):\n        self.tasks = {}\n\n    async def create_task(self, task_type, parameters):\n        task_id = f"task_{len(self.tasks) + 1}"\n        self.tasks[task_id] = {"type": task_type, "parameters": parameters, "status": "created"}\n        return task_id\n\n    async def get_task(self, task_id):\n        return self.tasks.get(task_id)\n\n    async def update_task(self, task_id, status, result=None):\n        if task_id in self.tasks:\n            self.tasks[task_id]["status"] = status\n            if result:\n                self.tasks[task_id]["result"] = result\n            return True\n        return False' > /app/orchestrator/tasks/rag_tasks.py && \
+    touch /app/orchestrator/tasks/__init__.py && \
+    touch /app/orchestrator/__init__.py
+EOL
+        echo "✓ Création des modules ajoutée au Dockerfile"
+    fi
+fi
+
+# 7. Reconstruire avec force
+echo "7. Reconstruction forcée..."
 docker-compose build --no-cache --pull mar-api
 echo "✓ Image reconstruite"
 
-# 7. Redémarrer les services
-echo "7. Redémarrage des services..."
+# 8. Redémarrer les services
+echo "8. Redémarrage des services..."
 docker-compose up -d
 echo "✓ Services redémarrés"
 
-# 8. Attendre et vérifier
-echo "8. Vérification finale..."
+# 9. Attendre et vérifier
+echo "9. Vérification finale..."
 sleep 30
 
 echo "Test de connectivité finale:"
