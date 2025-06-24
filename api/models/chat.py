@@ -53,7 +53,7 @@ class WorkflowRequest(BaseModel):
     query: Optional[str] = Field(None, description="Requête pour workflows de recherche")
     documents: Optional[List[Dict[str, Any]]] = Field(None, description="Documents pour workflows de traitement")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Paramètres spécifiques au workflow")
-    priority: str = Field("normal", description="Priorité d'exécution", regex="^(low|normal|high|urgent)$")
+    priority: str = Field("normal", description="Priorité d'exécution", pattern="^(low|normal|high|urgent)$")
     timeout: Optional[int] = Field(300, description="Timeout en secondes", ge=10, le=3600)
 
 
@@ -93,7 +93,7 @@ class ChatMessage(BaseModel):
     """Message dans une conversation"""
     message_id: str = Field(..., description="ID unique du message")
     content: str = Field(..., description="Contenu du message")
-    role: str = Field(..., description="Rôle (user/assistant)", regex="^(user|assistant|system)$")
+    role: str = Field(..., description="Rôle (user/assistant)", pattern="^(user|assistant|system)$")
     timestamp: datetime = Field(..., description="Timestamp du message")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Métadonnées du message")
     sources: Optional[List[SourceDocument]] = Field(None, description="Sources pour réponses assistant")
@@ -141,7 +141,7 @@ class FeedbackRequest(BaseModel):
     """Requête de feedback utilisateur"""
     message_id: str = Field(..., description="ID du message concerné")
     rating: int = Field(..., description="Note de 1 à 5", ge=1, le=5)
-    feedback_type: str = Field(..., description="Type de feedback", regex="^(quality|relevance|accuracy|speed)$")
+    feedback_type: str = Field(..., description="Type de feedback", pattern="^(quality|relevance|accuracy|speed)$")
     comment: Optional[str] = Field(None, description="Commentaire optionnel", max_length=1000)
     suggestions: Optional[List[str]] = Field(None, description="Suggestions d'amélioration")
     timestamp: datetime = Field(default_factory=datetime.now)
