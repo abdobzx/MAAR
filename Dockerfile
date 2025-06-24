@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie du code source
 COPY . .
 
+# Création des répertoires nécessaires
+RUN mkdir -p /app/data/vector_store
+
 # Création d'un utilisateur non-root pour la sécurité
 RUN adduser --disabled-password --gecos '' --uid 1000 maruser && \
     chown -R maruser:maruser /app
