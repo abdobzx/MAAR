@@ -1,743 +1,256 @@
-<<<<<<< HEAD
-# 🤖 Plateforme MAR (Multi-Agent RAG) 
+# Multi-Agent RAG System (MAR-RAG)
 
-## 🎯 Vue d'ensemble
+## 🧠 Overview
 
-Plateforme **industrielle, observable, sécurisée et 100% locale** combinant agents IA spécialisés, LLMs locaux, et systèmes de récupération vectorielle pour des applications RAG avancées.
+This project implements a **Multi-Agent Retrieval-Augmented Generation (MAR-RAG)** system using a microservices architecture.
 
-**✅ Prête pour la production | 🔒 100% locale | 🚀 Auto-déployable | 📊 Observable**
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│                 │    │                  │    │                 │
-│   UI Frontend   │◄──►│   API Gateway    │◄──►│  Orchestrateur  │
-│ (Streamlit/React│    │    (FastAPI)     │    │    (CrewAI)     │
-│                 │    │                  │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                        │
-                                ▼                        ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │                  │    │                 │
-                       │   LLM Service    │    │  Agents Pool    │
-                       │    (Ollama)      │    │ Retriever/      │
-                       │                  │    │ Summarizer/...  │
-                       └──────────────────┘    └─────────────────┘
-                                │                        │
-                                ▼                        ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │                  │    │                 │
-                       │  Vector Store    │    │  Observabilité  │
-                       │ (FAISS/Chroma)   │    │ Prometheus/     │
-                       │                  │    │ Grafana/ELK     │
-                       └──────────────────┘    └─────────────────┘
-=======
-# 🚀 Système RAG Enterprise Multi-Agents
-
-<div align="center">
-
-![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.108+-green.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-brightgreen.svg)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-1.25+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-
-**Solution RAG (Retrieval-Augmented Generation) enterprise avec architecture multi-agents**
-
-*Intelligence artificielle conversationnelle pour la gestion documentaire d'entreprise*
-
-</div>
+User queries are processed by a central **Query Coordinator**, which delegates tasks to intelligent agents such as retrieval, generation, synthesis, or domain-specific services (e.g., ThreatIntel). The response includes a dynamic list of agents involved for traceability.
 
 ---
 
-## 📋 Vue d'ensemble
+## 📐 System Architecture
 
-Le **Système RAG Enterprise** est une plateforme complète de gestion documentaire intelligente qui utilise l'IA pour permettre aux entreprises d'interroger leurs données de manière conversationnelle. Notre architecture multi-agents assure un traitement spécialisé, une scalabilité enterprise et une sécurité renforcée.
+The system is composed of the following layers:
 
-### 🎯 Fonctionnalités clés
+### 1. **API & Load Balancing Layer**
+- **API Gateway (Kong/Nginx)**: Entry point for client queries.
+- **Load Balancer (HAProxy)**: Distributes traffic to internal services.
 
-- 🤖 **7 Agents spécialisés** - Orchestration, ingestion, vectorisation, stockage, récupération, synthèse, feedback
-- 📚 **Traitement multi-format** - PDF, DOCX, TXT, images (OCR), audio (transcription)
-- 🔍 **Recherche hybride** - Vectorielle + mots-clés pour une précision optimale
-- 🛡️ **Sécurité enterprise** - RBAC, chiffrement, audit complet
-- 📊 **Monitoring complet** - Prometheus, Grafana, ELK Stack
-- ⚡ **Performance optimisée** - Cache Redis, file d'attente Celery
-- 🌐 **API REST complète** - Documentation OpenAPI intégrée
+### 2. **Core Microservices (Agents)**
+- `QueryCoordinatorService`: Orchestrates the workflow.
+- `QueryAgentService`: Analyzes and classifies queries.
+- `RetrievalAgentService`: Fetches relevant documents via embeddings.
+- `ResponseGenerationAgentService`: Uses an LLM to generate answers.
+- `ContextSynthesisAgentService`: Merges session or contextual info when needed.
 
-### 🏗️ Architecture
+### 3. **Supporting Services**
+- `Vector Database (ChromaDB)`
+- `LLM Service (Ollama/Llama2)`
+- `Embedding Service (SentenceTransformers)`
+- `Cache Service (Redis)`
+- `Authentication Service (OAuth2)`
+- `Monitoring (Prometheus + Grafana)`
+- `Logging (ELK Stack)`
+- `Config Management (Consul)`
 
-```mermaid
-graph TB
-    A[Client Web/API] --> B[Load Balancer]
-    B --> C[FastAPI Gateway]
-    
-    C --> D[Agent Orchestrateur]
-    D --> E[Agent Ingestion]
-    D --> F[Agent Vectorisation]
-    D --> G[Agent Stockage]
-    D --> H[Agent Récupération]
-    D --> I[Agent Synthèse]
-    D --> J[Agent Feedback]
-    
-    E --> K[PostgreSQL]
-    F --> L[Qdrant Vector DB]
-    G --> M[MinIO Storage]
-    H --> N[Redis Cache]
-    I --> O[LLM APIs]
-    J --> P[Celery Workers]
->>>>>>> origin/main
-```
+### 4. **Data Layer**
+- `Document Storage (MinIO/S3)`
+- `Metadata DB (PostgreSQL)`
+- `Vector Index (Faiss/Annoy)`
+- `Session Store (Redis Cluster)`
+
+### 5. **Infrastructure**
+- Containerized with **Docker**
+- Managed with **Kubernetes**
+- Secured and observed via **Istio Service Mesh**
 
 ---
 
-<<<<<<< HEAD
-## 📁 Arborescence du Projet
+## 🔁 Dynamic Agent Involvement
+
+Each query results in a custom list of agents being called based on the query type.
+
+### ✅ Examples
+
+#### Example A: Simple Factual Query
+```json
+"agents_involved": ["QueryAgent", "RetrieverAgent", "ResponseGenerationAgent"]
+Example B: Cybersecurity Question
+json
+Copier
+Modifier
+"agents_involved": ["ThreatIntelAgent", "RetrieverAgent", "SecurityLLM"]
+Example C: Multi-turn Chat / Contextual
+json
+Copier
+Modifier
+"agents_involved": ["RetrieverAgent", "ContextSynthesisAgent", "LLM"]
+Example D: Pre-embedded Domain Retrieval
+json
+Copier
+Modifier
+"agents_involved": ["QueryAgent", "VectorDBService", "LLM"]
+The "agents_involved" field in the API response is generated dynamically by the QueryCoordinatorService depending on:
+
+Query intent
+
+Available context
+
+Required domain knowledge
+
+System health and service availability
+
+📌 Use Case Examples
+✅ Example 1: Machine Learning
+Input
+
+bash
+Copier
+Modifier
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the key features of machine learning?",
+    "user_id": "user123"
+  }'
+Output
+
+json
+Copier
+Modifier
+{
+  "user_id": "user123",
+  "query": "What are the key features of machine learning?",
+  "answer": "Key features of machine learning include the ability to learn from data, adapt to new information, make predictions, and improve performance over time without explicit programming.",
+  "retrieved_documents": [
+    {
+      "title": "Introduction to Machine Learning",
+      "source": "Wikipedia",
+      "content_snippet": "Machine learning focuses on enabling systems to learn from data, identify patterns, and make decisions..."
+    }
+  ],
+  "agents_involved": ["RetrieverAgent", "LLMAnswerAgent"]
+}
+✅ Example 2: DevOps CI/CD
+Input
+
+bash
+Copier
+Modifier
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What is CI/CD in DevOps?",
+    "user_id": "abdo_dev"
+  }'
+Output
+
+json
+Copier
+Modifier
+{
+  "user_id": "abdo_dev",
+  "query": "What is CI/CD in DevOps?",
+  "answer": "CI/CD stands for Continuous Integration and Continuous Deployment. It's a DevOps practice that enables teams to integrate code changes regularly, automatically test them, and deploy to production faster and more reliably.",
+  "retrieved_documents": [
+    {
+      "title": "CI/CD Pipeline Explained",
+      "source": "DevOps Handbook",
+      "content_snippet": "CI/CD automates the software delivery process, ensuring code changes are automatically built, tested, and deployed."
+    }
+  ],
+  "agents_involved": ["RetrieverAgent", "PipelineAgent", "AnswerAgent"]
+}
+✅ Example 3: Cybersecurity - Phishing
+Input
+
+bash
+Copier
+Modifier
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "How can we detect phishing attacks?",
+    "user_id": "soc_team"
+  }'
+Output
+
+json
+Copier
+Modifier
+{
+  "user_id": "soc_team",
+  "query": "How can we detect phishing attacks?",
+  "answer": "Phishing attacks can be detected using email filters, anomaly detection algorithms, DNS analysis, and employee awareness training. SOC tools like SIEMs often flag suspicious emails or traffic.",
+  "retrieved_documents": [
+    {
+      "title": "Phishing Detection Techniques",
+      "source": "MITRE ATT&CK",
+      "content_snippet": "Detection methods include analyzing headers, domains, payload behavior, and user interaction patterns."
+    }
+  ],
+  "agents_involved": ["ThreatIntelAgent", "RetrieverAgent", "SecurityLLM"]
+}
+✅ Example 4: HR Question
+Input
+
+bash
+Copier
+Modifier
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are common reasons for employee turnover?",
+    "user_id": "hr_admin"
+  }'
+Output
+
+json
+Copier
+Modifier
+{
+  "user_id": "hr_admin",
+  "query": "What are common reasons for employee turnover?",
+  "answer": "Common reasons for employee turnover include lack of career growth, poor management, low compensation, toxic work culture, and lack of work-life balance.",
+  "retrieved_documents": [
+    {
+      "title": "Top Causes of Employee Turnover",
+      "source": "Harvard Business Review",
+      "content_snippet": "Survey results show poor leadership and lack of recognition as key drivers of voluntary exits."
+    }
+  ],
+  "agents_involved": ["HRDomainAgent", "RetrieverAgent", "LLMAnswerAgent"]
+}
+✅ Example 5: Financial RAG
+Input
+
+bash
+Copier
+Modifier
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the main KPIs in financial performance?",
+    "user_id": "finance_bot"
+  }'
+Output
+
+json
+Copier
+Modifier
+{
+  "user_id": "finance_bot",
+  "query": "What are the main KPIs in financial performance?",
+  "answer": "The main KPIs include revenue, net profit margin, operating cash flow, ROI, and EBITDA. These metrics provide insight into a company’s profitability, efficiency, and financial stability.",
+  "retrieved_documents": [
+    {
+      "title": "Financial KPIs Overview",
+      "source": "Investopedia",
+      "content_snippet": "Key indicators include return on assets (ROA), current ratio, and gross profit margin..."
+    }
+  ],
+  "agents_involved": ["FinanceAgent", "RetrieverAgent", "SummaryAgent"]
+}
+📊 Monitoring & Logging
+Prometheus + Grafana: Metrics, latency, and load visualization.
+
+ELK Stack: Centralized logging for all agents and services.
+
+Kubernetes: Horizontal auto-scaling, failover, rolling updates.
+
+🔐 Security & Access
+OAuth2 for authentication.
+
+Role-based agent permissions.
+
+Rate limiting at API Gateway.
+
+📦 Deployment Stack
+Docker
+
+Kubernetes (K8s)
+
+Istio Service Mesh
+
+ChromaDB, Faiss, MinIO, PostgreSQL, Redis
 
-```
-📦 plateforme-mar/
-├── 📁 agents/                      # Agents IA spécialisés
-│   ├── 📁 retriever/              # Agent de récupération vectorielle
-│   ├── 📁 summarizer/             # Agent de résumé
-│   ├── 📁 synthesizer/            # Agent de synthèse contextualisée
-│   ├── 📁 critic/                 # Agent de validation/QA
-│   └── 📁 ranker/                 # Agent de classement (optionnel)
-├── 📁 orchestrator/               # Orchestrateur CrewAI
-│   ├── 📁 crew/                   # Définitions d'équipes
-│   ├── 📁 tasks/                  # Tâches et workflows
-│   └── 📁 tools/                  # Outils partagés
-├── 📁 api/                        # API Gateway FastAPI
-│   ├── 📁 routers/                # Endpoints par domaine
-│   ├── 📁 middleware/             # Middleware custom
-│   └── 📁 auth/                   # Authentification & sécurité
-├── 📁 llm/                        # Service LLM local
-│   ├── 📁 ollama/                 # Wrapper Ollama
-│   ├── 📁 models/                 # Gestion des modèles
-│   └── 📁 pooling/                # Pool de connexions
-├── 📁 vector_store/               # Stockage vectoriel implémenté
-│   ├── � __init__.py             # Module vector store
-│   ├── 📄 models.py               # Modèles de données
-│   ├── 📄 base.py                 # Interface abstraite
-│   ├── 📄 faiss_store.py          # Implémentation FAISS
-│   ├── � chroma_store.py         # Implémentation ChromaDB
-│   └── � ingestion.py            # Système d'ingestion
-├── 📁 ui/                         # Interfaces utilisateur
-│   └── 📁 streamlit/              # UI Streamlit moderne
-│       ├── � app.py              # Application principale
-│       ├── � Dockerfile          # Image Docker UI
-│       └── � requirements.txt    # Dépendances UI
-├── 📁 docker/                     # Conteneurisation
-│   ├── 📁 services/               # Dockerfiles par service
-│   └── 📁 base/                   # Images de base
-├── 📁 k8s/                        # Orchestration Kubernetes
-│   ├── 📁 helm/                   # Charts Helm
-│   │   ├── 📁 charts/             # Charts principaux
-│   │   ├── 📁 templates/          # Templates Kubernetes
-│   │   └── 📁 values/             # Valeurs par environnement
-│   └── 📁 manifests/              # Manifestes YAML bruts
-├── 📁 monitoring/                 # Observabilité complète
-│   ├── 📁 prometheus/             # Métriques
-│   │   ├── 📁 rules/              # Règles d'alerting
-│   │   └── 📁 config/             # Configuration
-│   ├── 📁 grafana/                # Visualisation
-│   │   ├── 📁 dashboards/         # Tableaux de bord
-│   │   └── 📁 datasources/        # Sources de données
-│   └── 📁 elk/                    # Logs centralisés
-│       ├── 📁 elasticsearch/      # Index et mapping
-│       ├── 📁 logstash/           # Pipeline de traitement
-│       └── 📁 kibana/             # Interface de recherche
-├── 📁 ci-cd/                      # Déploiement continu
-│   ├── 📁 github-actions/         # Pipelines GitHub
-│   └── 📁 argocd/                 # GitOps (optionnel)
-├── 📁 tests/                      # Tests automatisés
-│   ├── 📁 unit/                   # Tests unitaires
-│   ├── 📁 integration/            # Tests d'intégration
-│   └── 📁 e2e/                    # Tests end-to-end
-├── 📁 scripts/                    # Scripts utilitaires
-│   ├── 📁 deployment/             # Scripts de déploiement
-│   ├── 📁 maintenance/            # Scripts de maintenance
-│   └── 📁 ingestion/              # Scripts d'ingestion
-├── 📁 docs/                       # Documentation
-│   ├── 📁 api/                    # Documentation API
-│   ├── 📁 architecture/           # Architecture technique
-│   └── 📁 deployment/             # Guide de déploiement
-├── 📁 data/                       # Données
-│   ├── 📁 documents/              # Documents sources
-│   └── 📁 vectors/                # Index vectoriels
-├── 📁 config/                     # Configuration
-└── 📁 logs/                       # Logs locaux
-```
-
----
-
-## 🚀 Démarrage Rapide
-
-### Prérequis
-
-- **Docker** 20.10+
-- **Docker Compose** 2.0+
-- **Python** 3.10+
-- **Node.js** 18+ (pour l'UI React)
-- **Kubernetes** (Minikube/k3s pour local)
-
-### Installation Express
-
-```bash
-# 1. Cloner le projet
-git clone <repository-url>
-cd plateforme-mar
-
-# 2. Initialiser l'environnement
-./scripts/deployment/init.sh
-
-# 3. Démarrer tous les services
-docker-compose up -d
-
-# 4. Vérifier le déploiement
-./scripts/deployment/health-check.sh
-
-# 5. Accéder à l'interface
-# Streamlit: http://localhost:8501
-# React: http://localhost:3000
-# API: http://localhost:8000/docs
-# Grafana: http://localhost:3001
-# Kibana: http://localhost:5601
-=======
-## 🚀 Démarrage rapide
-
-### Prérequis
-
-- **Python 3.11+**
-- **Docker & Docker Compose**
-- **Kubernetes 1.25+** (pour production)
-- **Helm 3.8+**
-
-### Installation locale (Développement)
-
-1. **Cloner le repository**
-   ```bash
-   git clone <repository-url>
-   cd MAR
-   ```
-
-2. **Configuration environnement**
-   ```bash
-   cp .env.example .env.development
-   # Éditer .env.development avec vos clés API
-   ```
-
-3. **Lancer avec Docker Compose**
-   ```bash
-   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-   ```
-
-4. **Vérifier l'installation**
-   ```bash
-   curl http://localhost:8000/health
-   # Accéder à l'interface: http://localhost:8000/docs
-   ```
-
-### Déploiement production
-
-Voir le [Guide de déploiement](docs/deployment-guide.md) pour les instructions complètes.
-
----
-
-## 📖 Documentation
-
-### 📚 Guides utilisateur
-- [**Guide utilisateur**](docs/user-guide.md) - Interface et fonctionnalités
-- [**Documentation API**](docs/api.md) - Référence des endpoints
-
-### 🔧 Documentation technique
-- [**Guide de déploiement**](docs/deployment-guide.md) - Installation et configuration
-- [**Guide de production**](docs/production-deployment-guide.md) - Mise en production
-- [**Maintenance opérationnelle**](docs/operational-maintenance-guide.md) - Opérations quotidiennes
-- [**Plan de reprise d'activité**](docs/disaster-recovery-plan.md) - Procédures de récupération
-
----
-
-## 🏗️ Architecture technique
-
-### Composants principaux
-
-| Composant | Description | Technologies |
-|-----------|-------------|--------------|
-| **API Gateway** | Interface REST FastAPI | FastAPI, Uvicorn |
-| **Agents Multi-tâches** | Traitement spécialisé | CrewAI, LangChain |
-| **Base vectorielle** | Stockage embeddings | Qdrant, Weaviate |
-| **Base de données** | Métadonnées | PostgreSQL |
-| **Cache & Queues** | Performance | Redis, Celery |
-| **Stockage objet** | Documents | MinIO, S3 |
-| **Monitoring** | Observabilité | Prometheus, Grafana, ELK |
-
-### Agents spécialisés
-
-1. **🎭 Agent Orchestrateur** - Coordination des workflows
-2. **📥 Agent Ingestion** - Traitement des documents
-3. **🧮 Agent Vectorisation** - Génération d'embeddings
-4. **💾 Agent Stockage** - Persistance des données
-5. **🔍 Agent Récupération** - Recherche contextuelle
-6. **✍️ Agent Synthèse** - Génération de réponses
-7. **🧠 Agent Feedback** - Apprentissage continu
-
----
-
-## ⚙️ Configuration
-
-### Variables d'environnement
-
-Copiez `.env.example` vers `.env` et configurez :
-
-```bash
-# Application
-APP_NAME=Enterprise RAG System
-ENVIRONMENT=development
-DEBUG=true
-
-# APIs LLM
-OPENAI_API_KEY=sk-your-openai-key
-COHERE_API_KEY=your-cohere-key
-ANTHROPIC_API_KEY=your-anthropic-key
-
-# Bases de données
-POSTGRES_HOST=localhost
-POSTGRES_PASSWORD=your-password
-QDRANT_HOST=localhost
-REDIS_URL=redis://localhost:6379
-```
-
-Voir [`.env.example`](.env.example) pour la configuration complète.
-
----
-
-## 🧪 Tests
-
-### Tests unitaires
-```bash
-python -m pytest tests/unit/ -v
-```
-
-### Tests d'intégration
-```bash
-python -m pytest tests/integration/ -v
-```
-
-### Tests de charge
-```bash
-cd tests/load
-python -m locust -f locustfile.py --host=http://localhost:8000
->>>>>>> origin/main
-```
-
----
-
-<<<<<<< HEAD
-## 🔧 Composants Principaux
-
-### 🤖 Agents IA (CrewAI)
-
-| Agent | Rôle | Responsabilités |
-|-------|------|----------------|
-| **Retriever** | Récupération | Index vectoriel, recherche sémantique |
-| **Summarizer** | Résumé | Condensation de contenu |
-| **Synthesizer** | Synthèse | Génération contextualisée |
-| **Critic** | Validation | QA et vérification de cohérence |
-| **Ranker** | Classement | Scoring et priorisation |
-
-### 🧠 LLMs Supportés (Ollama)
-
-- **LLaMA 3** (8B, 70B)
-- **Mistral** (7B, 8x7B)
-- **Phi-3** (3.8B, 14B)
-- **Code Llama** (7B, 13B, 34B)
-
-### 📊 Vector Stores
-
-- **FAISS** : Recherche vectorielle haute performance
-- **Chroma** : Base vectorielle avec métadonnées enrichies
-
-### 🌐 API Gateway
-
-- **FastAPI** avec documentation auto-générée
-- **Authentification** JWT + API Keys
-- **Rate Limiting** et CORS
-- **Validation** automatique des schémas
-
----
-
-## 📈 Observabilité
-
-### Métriques (Prometheus + Grafana)
-- 🖥️ **Système** : CPU, RAM, Disque, Réseau
-- 🤖 **Agents** : Latence, succès, scores qualité
-- 🧠 **LLM** : Tokens/s, temps de réponse, utilisation mémoire
-- 🔍 **Vector Store** : Requêtes, index size, similarité
-
-### Logs (ELK Stack)
-- 📝 **Agents** : Exécutions, erreurs, performances
-- 🌐 **API** : Requêtes, réponses, authentification
-- 🧠 **LLM** : Prompts, générations, métriques
-- 🔍 **Vector Store** : Recherches, indexations
-
-### Alertes
-- 🚨 **Downtime** : Services indisponibles
-- ⚡ **Performance** : Latence élevée
-- 💾 **Ressources** : Mémoire/CPU critique
-- 🔍 **Qualité** : Scores agents dégradés
-
----
-
-## 🔒 Sécurité
-
-### Authentification
-- **JWT Tokens** avec rotation automatique
-- **API Keys** pour accès service-to-service
-- **RBAC** : Contrôle d'accès basé sur les rôles
-
-### Protection
-- **Rate Limiting** : Protection contre le spam
-- **CORS** : Configuration cross-origin
-- **Validation** : Schémas Pydantic stricts
-- **Secrets** : Vault ou ConfigMaps sécurisés
-=======
-## 📊 Monitoring
-
-### Métriques disponibles
-
-- **API** : Temps de réponse, taux d'erreur, throughput
-- **Agents** : Performance individuelle, files d'attente
-- **Infrastructure** : CPU, mémoire, stockage
-- **Business** : Utilisation, satisfaction utilisateur
-
-### Dashboards Grafana
-
-- Dashboard système global
-- Métriques par agent
-- Performance API
-- Alertes opérationnelles
-
----
-
-## 🛡️ Sécurité
-
-### Fonctionnalités de sécurité
-
-- ✅ **Authentification SSO** - Keycloak, SAML, OIDC
-- ✅ **Autorisation RBAC** - Permissions granulaires
-- ✅ **Chiffrement** - TLS, données au repos
-- ✅ **Audit complet** - Logs sécurisés
-- ✅ **Network Policies** - Isolation réseau
-- ✅ **Secrets Management** - Vault, K8s secrets
-
-### Conformité
-
-- **RGPD** - Protection des données personnelles
-- **SOC 2** - Contrôles de sécurité
-- **ISO 27001** - Gestion de la sécurité
->>>>>>> origin/main
-
----
-
-## 🚀 Déploiement
-
-<<<<<<< HEAD
-### Local (Docker Compose)
-```bash
-docker-compose -f docker/docker-compose.yml up -d
-```
-
-### Production (Kubernetes)
-```bash
-# Via Helm
-helm install mar-platform k8s/helm/charts/mar-platform
-
-# Via manifestes
-kubectl apply -k k8s/manifests/production
-```
-
-### CI/CD
-```bash
-# Tests automatiques
-./.github/workflows/ci.yml
-
-# Déploiement automatique
-./.github/workflows/cd.yml
-=======
-### Environnements supportés
-
-| Environnement | Description | Configuration |
-|---------------|-------------|---------------|
-| **Development** | Local avec Docker Compose | `docker-compose.dev.yml` |
-| **Staging** | Pré-production Kubernetes | `values-staging.yaml` |
-| **Production** | Production enterprise | `values-production.yaml` |
-
-### Scripts de déploiement
-
-```bash
-# Déploiement staging
-./scripts/deployment/deploy.sh staging v1.0.0
-
-# Déploiement production
-./scripts/deployment/deploy.sh production v1.0.0
->>>>>>> origin/main
-```
-
----
-
-<<<<<<< HEAD
-## 🧪 Tests & Benchmarks
-
-### Tests Automatisés
-```bash
-# Tests unitaires
-pytest tests/unit/
-
-# Tests d'intégration
-pytest tests/integration/
-
-# Tests end-to-end
-pytest tests/e2e/
-```
-
-### Benchmarks
-```bash
-# Performance agents
-python scripts/benchmark/agents_performance.py
-
-# Latence LLM
-python scripts/benchmark/llm_latency.py
-
-# Précision vectorielle
-python scripts/benchmark/vector_accuracy.py
-```
-
----
-
-## 📚 Documentation
-
-- 📖 **[Guide Utilisateur](docs/user-guide.md)**
-- 🏗️ **[Architecture Technique](docs/architecture/)**
-- 🚀 **[Guide de Déploiement](docs/deployment/)**
-- 🔧 **[API Documentation](docs/api/)**
-
----
-
-## 🛠️ Configuration
-
-### Variables d'Environnement
-
-```bash
-# LLM Configuration
-OLLAMA_BASE_URL=http://localhost:11434
-DEFAULT_MODEL=llama3:8b
-
-# Vector Store
-VECTOR_STORE_TYPE=faiss  # ou chroma
-VECTOR_DIMENSION=1536
-
-# API Configuration  
-API_HOST=0.0.0.0
-API_PORT=8000
-JWT_SECRET_KEY=your-secret-key
-
-# Monitoring
-PROMETHEUS_URL=http://localhost:9090
-GRAFANA_URL=http://localhost:3001
-```
-
-### Fichiers de Configuration
-
-- `config/agents.yaml` : Configuration des agents
-- `config/llm.yaml` : Paramètres LLM
-- `config/vector-store.yaml` : Configuration vectorielle
-- `config/monitoring.yaml` : Métriques et alertes
-
----
-
-## 🔄 Workflow Complet
-
-### Exemple de Requête RAG
-
-```mermaid
-sequenceDiagram
-    participant U as Utilisateur
-    participant API as API Gateway
-    participant O as Orchestrateur
-    participant R as Agent Retriever
-    participant S as Agent Synthesizer
-    participant L as LLM Ollama
-    participant V as Vector Store
-
-    U->>API: POST /chat {"query": "Qu'est-ce que...?"}
-    API->>O: Créer tâche RAG
-    O->>R: Récupérer contexte
-    R->>V: Recherche vectorielle
-    V-->>R: Documents similaires
-    R-->>O: Contexte enrichi
-    O->>S: Synthétiser réponse
-    S->>L: Générer avec contexte
-    L-->>S: Réponse générée
-    S-->>O: Réponse finale
-    O-->>API: Résultat complet
-    API-->>U: Réponse formatée
-```
-
----
-
-## 💡 Fonctionnalités Avancées
-
-### Auto-scaling
-- **HPA** : Horizontal Pod Autoscaler pour K8s
-- **Pool dynamique** : Agents à la demande
-- **Load balancing** : Distribution intelligente
-
-### Optimisations
-- **Caching** : Redis pour réponses fréquentes
-- **Compression** : Gzip pour transferts
-- **Pooling** : Connexions réutilisables
-
-### Extensibilité
-- **Plugins** : Architecture modulaire
-- **Webhooks** : Intégrations externes
-- **APIs** : Standards OpenAPI 3.0
-
----
-
-## 📞 Support & Contribution
-
-### Issues & Bugs
-Créer une issue avec les tags appropriés dans le repository.
-
-### Contribution
-1. Fork du repository
-2. Créer une feature branch
-3. Tests et documentation
-4. Pull Request avec description détaillée
-
-### Contact
-- 📧 **Email** : support@mar-platform.com
-- 💬 **Discord** : [Serveur communauté](https://discord.gg/mar-platform)
-- 📚 **Wiki** : [Documentation complète](https://wiki.mar-platform.com)
-
----
-
-## 📄 Licence
-
-**MIT License** - Voir [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 🎉 Remerciements
-
-Merci à toutes les technologies open-source qui rendent cette plateforme possible :
-- 🤖 **CrewAI** pour l'orchestration d'agents
-- 🧠 **Ollama** pour les LLMs locaux
-- 🔍 **FAISS/Chroma** pour la recherche vectorielle
-- 📊 **Prometheus/Grafana** pour le monitoring
-- 🐳 **Docker/Kubernetes** pour l'orchestration
-
----
-
-**🚀 Plateforme MAR - L'avenir du RAG multi-agents est local !**
-=======
-## 📈 Performance
-
-### Métriques de référence
-
-- **Temps de réponse API** : < 200ms (P95)
-- **Indexation document** : 10-50 documents/minute
-- **Recherche vectorielle** : < 100ms (P95)
-- **Throughput** : 1000+ requêtes/seconde
-- **Disponibilité** : 99.9% SLA
-
-### Optimisations
-
-- Cache Redis multi-niveaux
-- Index vectoriels optimisés
-- Pool de connexions
-- Auto-scaling Kubernetes
-
----
-
-## 🛠️ Développement
-
-### Structure du projet
-
-```
-MAR/
-├── api/                 # API FastAPI
-├── agents/             # Agents spécialisés
-├── core/               # Configuration et utilitaires
-├── database/           # Modèles et migrations
-├── docs/               # Documentation
-├── infrastructure/     # Kubernetes, Helm, monitoring
-├── scripts/            # Scripts de déploiement
-├── security/           # Authentification et autorisation
-├── tasks/              # Tâches Celery
-└── tests/              # Tests unitaires et intégration
-```
-
-### Contributing
-
-1. Fork le repository
-2. Créer une branche feature
-3. Committer les changements
-4. Pousser vers la branche
-5. Créer une Pull Request
-
----
-
-## 📝 Licence
-
-Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 📞 Support
-
-### Équipe de support
-
-- 📧 **Email** : support@votre-entreprise.com
-- 💬 **Slack** : #rag-system-support
-- 📞 **Urgences** : +33 X XX XX XX XX (24/7)
-
-### Ressources
-
-- [**Documentation technique**](docs/) - Guides complets
-- [**API Reference**](docs/api.md) - Référence des endpoints
-- [**FAQ**](docs/user-guide.md#faq) - Questions fréquentes
-- [**Runbooks**](docs/runbooks/) - Procédures d'incident
-
----
-
-## 🔄 Roadmap
-
-### Version 1.1 (Q1 2025)
-- [ ] Support multimodal (images, graphiques)
-- [ ] Agents conversationnels avancés
-- [ ] Intégrations CRM/ERP
-- [ ] Mobile app
-
-### Version 1.2 (Q2 2025)
-- [ ] Fine-tuning de modèles personnalisés
-- [ ] Analyse de sentiment
-- [ ] Workflow automation
-- [ ] Multi-tenancy avancée
-
----
-
-<div align="center">
-
-**⭐ Si ce projet vous plaît, donnez-lui une étoile !**
-
-[Documentation](docs/) • [API](docs/api.md) • [Déploiement](docs/deployment-guide.md) • [Support](docs/user-guide.md#contact-et-support)
-
----
-
-*Développé avec ❤️ par l'équipe Enterprise RAG*
-
-</div>
->>>>>>> origin/main
