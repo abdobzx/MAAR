@@ -1,256 +1,269 @@
-# Multi-Agent RAG System (MAR-RAG)
+
+
+# 🚀 Multi-Agent RAG System (MAR-RAG)
 
 ## 🧠 Overview
 
-This project implements a **Multi-Agent Retrieval-Augmented Generation (MAR-RAG)** system using a microservices architecture.
+**MAR-RAG (Multi-Agent Retrieval-Augmented Generation)** is a microservice-based system designed for intelligent query processing. It leverages a dynamic set of autonomous agents—including retrievers, language models, and domain-specific services—to deliver high-quality, context-aware answers.
 
-User queries are processed by a central **Query Coordinator**, which delegates tasks to intelligent agents such as retrieval, generation, synthesis, or domain-specific services (e.g., ThreatIntel). The response includes a dynamic list of agents involved for traceability.
+A central **Query Coordinator** orchestrates workflows and dynamically determines which agents to involve based on query intent, user context, and system state.
 
 ---
 
-## 📐 System Architecture
+## 🏗️ System Architecture
 
-The system is composed of the following layers:
+The MAR-RAG system is modular and horizontally scalable, consisting of five main layers:
 
-### 1. **API & Load Balancing Layer**
-- **API Gateway (Kong/Nginx)**: Entry point for client queries.
-- **Load Balancer (HAProxy)**: Distributes traffic to internal services.
+### 1. **API & Load Balancing**
 
-### 2. **Core Microservices (Agents)**
-- `QueryCoordinatorService`: Orchestrates the workflow.
-- `QueryAgentService`: Analyzes and classifies queries.
-- `RetrievalAgentService`: Fetches relevant documents via embeddings.
-- `ResponseGenerationAgentService`: Uses an LLM to generate answers.
-- `ContextSynthesisAgentService`: Merges session or contextual info when needed.
+* **API Gateway** (Kong or Nginx): Manages incoming queries and routes them securely.
+* **Load Balancer** (HAProxy): Ensures high availability and traffic distribution.
+
+### 2. **Core Agents**
+
+* `QueryCoordinatorService`: Central brain that routes tasks to agents.
+* `QueryAgentService`: Parses and classifies incoming queries.
+* `RetrievalAgentService`: Embedding-based document retriever.
+* `ResponseGenerationAgentService`: Uses LLMs to generate natural language responses.
+* `ContextSynthesisAgentService`: Adds memory and multi-turn context understanding.
 
 ### 3. **Supporting Services**
-- `Vector Database (ChromaDB)`
-- `LLM Service (Ollama/Llama2)`
-- `Embedding Service (SentenceTransformers)`
-- `Cache Service (Redis)`
-- `Authentication Service (OAuth2)`
-- `Monitoring (Prometheus + Grafana)`
-- `Logging (ELK Stack)`
-- `Config Management (Consul)`
+
+* **Vector DB**: `ChromaDB` or `Faiss` for similarity search.
+* **LLM Backend**: `Ollama`, `LLaMA2`, or other open models.
+* **Embedding Service**: SentenceTransformers-based encoding.
+* **Cache Layer**: Redis for session and context storage.
+* **Authentication**: OAuth2.
+* **Monitoring**: Prometheus + Grafana.
+* **Logging**: ELK stack (Elasticsearch, Logstash, Kibana).
+* **Configuration Management**: Consul.
 
 ### 4. **Data Layer**
-- `Document Storage (MinIO/S3)`
-- `Metadata DB (PostgreSQL)`
-- `Vector Index (Faiss/Annoy)`
-- `Session Store (Redis Cluster)`
+
+* **Object Storage**: MinIO or AWS S3 for document storage.
+* **Metadata DB**: PostgreSQL.
+* **Vector Index**: Faiss/Annoy.
+* **Session Store**: Redis Cluster.
 
 ### 5. **Infrastructure**
-- Containerized with **Docker**
-- Managed with **Kubernetes**
-- Secured and observed via **Istio Service Mesh**
+
+* Containerized with **Docker**.
+* Orchestrated using **Kubernetes**.
+* Secured and observable through **Istio Service Mesh**.
 
 ---
 
 ## 🔁 Dynamic Agent Involvement
 
-Each query results in a custom list of agents being called based on the query type.
+For every query, the `QueryCoordinatorService` dynamically selects agents based on:
 
-### ✅ Examples
+* 🧠 Query intent
+* 📚 Available context
+* 🧩 Domain knowledge
+* ⚙️ Service availability and health
 
-#### Example A: Simple Factual Query
-```json
-"agents_involved": ["QueryAgent", "RetrieverAgent", "ResponseGenerationAgent"]
-Example B: Cybersecurity Question
-json
-Copier
-Modifier
-"agents_involved": ["ThreatIntelAgent", "RetrieverAgent", "SecurityLLM"]
-Example C: Multi-turn Chat / Contextual
-json
-Copier
-Modifier
-"agents_involved": ["RetrieverAgent", "ContextSynthesisAgent", "LLM"]
-Example D: Pre-embedded Domain Retrieval
-json
-Copier
-Modifier
-"agents_involved": ["QueryAgent", "VectorDBService", "LLM"]
-The "agents_involved" field in the API response is generated dynamically by the QueryCoordinatorService depending on:
+### Agent Involvement Examples
 
-Query intent
+| Scenario                  | Agents Involved                                               |
+| ------------------------- | ------------------------------------------------------------- |
+| Simple factual query      | `["QueryAgent", "RetrieverAgent", "ResponseGenerationAgent"]` |
+| Cybersecurity domain      | `["ThreatIntelAgent", "RetrieverAgent", "SecurityLLM"]`       |
+| Multi-turn conversation   | `["RetrieverAgent", "ContextSynthesisAgent", "LLM"]`          |
+| Domain-specific retrieval | `["QueryAgent", "VectorDBService", "LLM"]`                    |
 
-Available context
+---
 
-Required domain knowledge
+## 📥 Input / 📤 Output Examples
 
-System health and service availability
+Below are real API examples showcasing how the system responds to various queries.
 
-📌 Use Case Examples
-✅ Example 1: Machine Learning
-Input
+---
 
-bash
-Copier
-Modifier
-curl -X POST "http://localhost:8000/query" \
+### ✅ Example 1: Machine Learning
+
+**Input**
+
+```bash
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What are the key features of machine learning?",
     "user_id": "user123"
   }'
-Output
+```
 
-json
-Copier
-Modifier
+**Output**
+
+```json
 {
   "user_id": "user123",
   "query": "What are the key features of machine learning?",
-  "answer": "Key features of machine learning include the ability to learn from data, adapt to new information, make predictions, and improve performance over time without explicit programming.",
+  "answer": "Key features include learning from data, adapting, predicting outcomes, and improving performance over time.",
   "retrieved_documents": [
     {
       "title": "Introduction to Machine Learning",
       "source": "Wikipedia",
-      "content_snippet": "Machine learning focuses on enabling systems to learn from data, identify patterns, and make decisions..."
+      "content_snippet": "Machine learning enables systems to learn from data, identify patterns..."
     }
   ],
   "agents_involved": ["RetrieverAgent", "LLMAnswerAgent"]
 }
-✅ Example 2: DevOps CI/CD
-Input
+```
 
-bash
-Copier
-Modifier
-curl -X POST "http://localhost:8000/query" \
+---
+
+### ✅ Example 2: DevOps CI/CD
+
+**Input**
+
+```bash
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is CI/CD in DevOps?",
     "user_id": "abdo_dev"
   }'
-Output
+```
 
-json
-Copier
-Modifier
+**Output**
+
+```json
 {
   "user_id": "abdo_dev",
   "query": "What is CI/CD in DevOps?",
-  "answer": "CI/CD stands for Continuous Integration and Continuous Deployment. It's a DevOps practice that enables teams to integrate code changes regularly, automatically test them, and deploy to production faster and more reliably.",
+  "answer": "CI/CD refers to Continuous Integration and Continuous Deployment...",
   "retrieved_documents": [
     {
       "title": "CI/CD Pipeline Explained",
       "source": "DevOps Handbook",
-      "content_snippet": "CI/CD automates the software delivery process, ensuring code changes are automatically built, tested, and deployed."
+      "content_snippet": "CI/CD automates software delivery, ensuring reliable, frequent deployments."
     }
   ],
   "agents_involved": ["RetrieverAgent", "PipelineAgent", "AnswerAgent"]
 }
-✅ Example 3: Cybersecurity - Phishing
-Input
+```
 
-bash
-Copier
-Modifier
-curl -X POST "http://localhost:8000/query" \
+---
+
+### ✅ Example 3: Cybersecurity - Phishing
+
+**Input**
+
+```bash
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "How can we detect phishing attacks?",
     "user_id": "soc_team"
   }'
-Output
+```
 
-json
-Copier
-Modifier
+**Output**
+
+```json
 {
   "user_id": "soc_team",
   "query": "How can we detect phishing attacks?",
-  "answer": "Phishing attacks can be detected using email filters, anomaly detection algorithms, DNS analysis, and employee awareness training. SOC tools like SIEMs often flag suspicious emails or traffic.",
+  "answer": "Phishing can be detected through filters, anomaly detection, DNS analysis, and training.",
   "retrieved_documents": [
     {
       "title": "Phishing Detection Techniques",
       "source": "MITRE ATT&CK",
-      "content_snippet": "Detection methods include analyzing headers, domains, payload behavior, and user interaction patterns."
+      "content_snippet": "Analysis of headers, domains, and behavior are key phishing indicators."
     }
   ],
   "agents_involved": ["ThreatIntelAgent", "RetrieverAgent", "SecurityLLM"]
 }
-✅ Example 4: HR Question
-Input
+```
 
-bash
-Copier
-Modifier
-curl -X POST "http://localhost:8000/query" \
+---
+
+### ✅ Example 4: HR Domain
+
+**Input**
+
+```bash
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What are common reasons for employee turnover?",
     "user_id": "hr_admin"
   }'
-Output
+```
 
-json
-Copier
-Modifier
+**Output**
+
+```json
 {
   "user_id": "hr_admin",
   "query": "What are common reasons for employee turnover?",
-  "answer": "Common reasons for employee turnover include lack of career growth, poor management, low compensation, toxic work culture, and lack of work-life balance.",
+  "answer": "Lack of growth, poor management, and toxic culture are key turnover drivers.",
   "retrieved_documents": [
     {
       "title": "Top Causes of Employee Turnover",
       "source": "Harvard Business Review",
-      "content_snippet": "Survey results show poor leadership and lack of recognition as key drivers of voluntary exits."
+      "content_snippet": "Surveys show poor leadership and lack of recognition as major exit factors."
     }
   ],
   "agents_involved": ["HRDomainAgent", "RetrieverAgent", "LLMAnswerAgent"]
 }
-✅ Example 5: Financial RAG
-Input
+```
 
-bash
-Copier
-Modifier
-curl -X POST "http://localhost:8000/query" \
+---
+
+### ✅ Example 5: Financial KPI Query
+
+**Input**
+
+```bash
+curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What are the main KPIs in financial performance?",
     "user_id": "finance_bot"
   }'
-Output
+```
 
-json
-Copier
-Modifier
+**Output**
+
+```json
 {
   "user_id": "finance_bot",
   "query": "What are the main KPIs in financial performance?",
-  "answer": "The main KPIs include revenue, net profit margin, operating cash flow, ROI, and EBITDA. These metrics provide insight into a company’s profitability, efficiency, and financial stability.",
+  "answer": "Revenue, net profit, ROI, and EBITDA are essential KPIs for financial performance.",
   "retrieved_documents": [
     {
       "title": "Financial KPIs Overview",
       "source": "Investopedia",
-      "content_snippet": "Key indicators include return on assets (ROA), current ratio, and gross profit margin..."
+      "content_snippet": "KPIs include ROA, current ratio, and gross profit margin..."
     }
   ],
   "agents_involved": ["FinanceAgent", "RetrieverAgent", "SummaryAgent"]
 }
-📊 Monitoring & Logging
-Prometheus + Grafana: Metrics, latency, and load visualization.
+```
 
-ELK Stack: Centralized logging for all agents and services.
+---
 
-Kubernetes: Horizontal auto-scaling, failover, rolling updates.
+## 📊 Monitoring & Observability
 
-🔐 Security & Access
-OAuth2 for authentication.
+* **Prometheus + Grafana**: Real-time metrics, latency, throughput.
+* **ELK Stack**: Centralized logs for agents and microservices.
+* **Kubernetes Dashboard**: Health checks, autoscaling, failover, deployments.
 
-Role-based agent permissions.
+---
 
-Rate limiting at API Gateway.
+## 🔐 Security
 
-📦 Deployment Stack
-Docker
+* **OAuth2 Authentication**
+* **Role-Based Access Control (RBAC)**
+* **API Gateway Rate Limiting**
 
-Kubernetes (K8s)
+---
 
-Istio Service Mesh
+## 🧰 Deployment Stack
 
-ChromaDB, Faiss, MinIO, PostgreSQL, Redis
+* **Docker & Kubernetes**
+* **Istio Service Mesh**
+* **PostgreSQL, Redis, MinIO, ChromaDB, Faiss**
 
+---
