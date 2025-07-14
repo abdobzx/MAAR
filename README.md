@@ -289,19 +289,7 @@ MAR/
 
 ---
 
-## 📝 Licence
-
-Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus de détails.
-
 ---
-
-## 📞 Support
-
-### Équipe de support
-
-- 📧 **Email** : support@votre-entreprise.com
-- 💬 **Slack** : #rag-system-support
-- 📞 **Urgences** : +33 X XX XX XX XX (24/7)
 
 ### Ressources
 
