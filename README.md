@@ -336,6 +336,6 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus de détails.
 
 ---
 
-*Développé avec ❤️ par l'équipe Enterprise RAG*
+*Développé avec ❤️ 
 
 </div>
